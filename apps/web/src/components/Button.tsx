@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
-type Variant = 'primary' | 'outline' | 'ghost';
+type Variant = 'primary' | 'gold' | 'outline' | 'outlineLight' | 'ghost';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -9,15 +9,22 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const base =
-  'inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 font-body text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-cream';
+  'inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-body text-sm font-medium tracking-wide transition-all duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-cream';
 
 const variants: Record<Variant, string> = {
+  // Deep ink, cream text — the default editorial button.
   primary: 'bg-ink text-cream hover:bg-ink/90',
-  outline: 'border border-border bg-transparent text-ink hover:bg-ink/5',
-  ghost: 'bg-transparent text-ink hover:bg-ink/5',
+  // Warm gold, ink text — for primary CTAs, especially on the dark hero.
+  gold: 'bg-gold text-ink hover:bg-gold/90',
+  // Hairline outline on light backgrounds.
+  outline: 'border border-border bg-transparent text-ink hover:bg-ink/[0.04]',
+  // Outline for dark backgrounds (cream border + text).
+  outlineLight: 'border border-cream/40 bg-transparent text-cream hover:bg-cream/10',
+  // Quiet text button.
+  ghost: 'bg-transparent text-ink hover:bg-ink/[0.04]',
 };
 
-/** Brand button. No shadows; ink/cream/gold palette; quiet hover states. */
+/** Brand button. Pill shape, ink/cream/gold palette, quiet motion, no shadows. */
 export function Button({
   variant = 'primary',
   loading = false,

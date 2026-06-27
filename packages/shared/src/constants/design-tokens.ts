@@ -23,8 +23,8 @@ export const COLORS = {
 } as const;
 
 export const FONTS = {
-  /** Headlines — serif, editorial. */
-  heading: 'Georgia, "Times New Roman", serif',
+  /** Headlines — Cormorant Garamond, an editorial serif, with Georgia fallback. */
+  heading: '"Cormorant Garamond", Georgia, "Times New Roman", serif',
   /** Body — Inter on web, system sans on mobile. */
   body: 'Inter, system-ui, -apple-system, sans-serif',
 } as const;

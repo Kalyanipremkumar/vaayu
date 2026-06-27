@@ -22,7 +22,7 @@ const config: Config = {
         border: '#D8CFC0',
       },
       fontFamily: {
-        heading: ['Georgia', '"Times New Roman"', 'serif'],
+        heading: ['"Cormorant Garamond"', 'Georgia', '"Times New Roman"', 'serif'],
         body: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       borderRadius: {
