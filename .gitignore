@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Env / secrets — NEVER commit these
+.env
+.env.local
+.env.*.local
+*.local
+
+# Vite
+apps/web/dist/
+
+# Expo / React Native
+apps/mobile/.expo/
+apps/mobile/.expo-shared/
+apps/mobile/web-build/
+apps/mobile/dist/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Test / coverage
+coverage/
+
+# Supabase local
+packages/supabase/.branches/
+packages/supabase/.temp/
+
+# Misc Excel lock/data file living in the parent workspace
+~$*.xlsx

@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Vaayu",
+    "slug": "vaayu",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "vaayu",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#FFFDF8"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.vaayu.app"
+    },
+    "android": {
+      "package": "com.vaayu.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFDF8"
+      }
+    },
+    "plugins": ["expo-image-picker"],
+    "extra": {
+      "eas": {
+        "projectId": ""
+      }
+    }
+  }
+}
