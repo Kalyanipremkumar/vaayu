@@ -48,5 +48,8 @@ coverage/
 packages/supabase/.branches/
 packages/supabase/.temp/
 
+# Generated edge-function bundle of @vaayu/shared (regenerate: pnpm build:edge-shared)
+supabase/functions/generate-valuation/_shared.ts
+
 # Misc Excel lock/data file living in the parent workspace
 ~$*.xlsx

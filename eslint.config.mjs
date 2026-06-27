@@ -18,6 +18,8 @@ export default tseslint.config(
       '**/.expo/**',
       '**/coverage/**',
       'packages/supabase/src/types.ts',
+      // Generated esbuild bundle of @vaayu/shared for the edge function.
+      'supabase/functions/**/_shared.ts',
     ],
   },
   js.configs.recommended,
