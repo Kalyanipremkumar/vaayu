@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { FREE_VALUATION_LIMIT } from '@vaayu/shared';
 
 /**
@@ -35,7 +36,22 @@ export function HomePage() {
         </ol>
       </div>
 
-      <p className="mt-10 font-body text-sm text-muted">
+      <div className="mt-10 flex flex-wrap items-center gap-4">
+        <Link
+          to="/signup"
+          className="rounded-md bg-ink px-5 py-2.5 font-body text-sm font-medium text-cream transition-colors hover:bg-ink/90"
+        >
+          Get started
+        </Link>
+        <Link
+          to="/login"
+          className="rounded-md border border-border px-5 py-2.5 font-body text-sm font-medium text-ink transition-colors hover:bg-ink/5"
+        >
+          Sign in
+        </Link>
+      </div>
+
+      <p className="mt-6 font-body text-sm text-muted">
         Your first {FREE_VALUATION_LIMIT} valuations are free.
       </p>
     </main>
