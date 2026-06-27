@@ -14,7 +14,7 @@
     "dev:mobile": "pnpm --filter @vaayu/mobile start",
     "build:web": "pnpm --filter @vaayu/web build",
     "build:shared": "pnpm --filter @vaayu/shared build",
-    "build:edge-shared": "esbuild packages/shared/src/index.ts --bundle --format=esm --platform=neutral --target=es2022 --legal-comments=none --banner:js=\"// AUTO-GENERATED from @vaayu/shared — do not edit. Regenerate with: pnpm build:edge-shared\" --outfile=supabase/functions/generate-valuation/_shared.ts",
+    "build:edge-shared": "esbuild packages/shared/src/_edge-entry.ts --bundle --format=esm --platform=neutral --target=es2022 --legal-comments=none --banner:js=\"// AUTO-GENERATED from @vaayu/shared - do not edit. Regenerate with: pnpm build:edge-shared\" --outfile=supabase/functions/generate-valuation/_shared.ts",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
