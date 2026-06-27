@@ -5,6 +5,7 @@
  */
 import { create } from 'zustand';
 import type { ArtworkCondition, Dimensions } from '@vaayu/shared';
+import type { SavedValuation } from '../lib/valuation';
 
 /** Steps in the valuation wizard. */
 export type ValuationStep = 'upload' | 'context' | 'review' | 'pay' | 'processing' | 'result';
@@ -25,7 +26,10 @@ interface ValuationDraft {
 
 interface ValuationState extends ValuationDraft {
   step: ValuationStep;
+  /** The generated valuation, set when processing completes. */
+  result: SavedValuation | null;
   setStep: (step: ValuationStep) => void;
+  setResult: (result: SavedValuation | null) => void;
   update: (patch: Partial<ValuationDraft>) => void;
   reset: () => void;
 }
@@ -47,7 +51,9 @@ const initialDraft: ValuationDraft = {
 export const useValuationStore = create<ValuationState>((set) => ({
   ...initialDraft,
   step: 'upload',
+  result: null,
   setStep: (step) => set({ step }),
+  setResult: (result) => set({ result }),
   update: (patch) => set(patch),
-  reset: () => set({ ...initialDraft, step: 'upload' }),
+  reset: () => set({ ...initialDraft, step: 'upload', result: null }),
 }));

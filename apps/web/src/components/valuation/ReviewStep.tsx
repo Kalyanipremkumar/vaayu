@@ -17,12 +17,19 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+interface ReviewStepProps {
+  /** Kick off the valuation (upload + server call). */
+  onSubmit: () => void;
+  submitting: boolean;
+  error: string | null;
+}
+
 /**
- * Step 3 — review the submission and show how many free valuations remain.
- * The actual AI submission + paywall are wired in the next phase, so the submit
- * action is intentionally disabled with a note here.
+ * Step 3 — review the submission and show how many free valuations remain, then
+ * submit for valuation. The paywall (when no free valuations remain) is wired in
+ * Phase 3; for now a user with credits remaining proceeds straight to the AI.
  */
-export function ReviewStep() {
+export function ReviewStep({ onSubmit, submitting, error }: ReviewStepProps) {
   const store = useValuationStore();
   const { data: profile } = useProfile();
 
@@ -76,15 +83,26 @@ export function ReviewStep() {
         )}
       </div>
 
+      {error ? <p className="font-body text-sm text-red-700">{error}</p> : null}
+
       <div className="flex items-center justify-between">
-        <Button variant="ghost" onClick={() => store.setStep('context')}>
+        <Button variant="ghost" onClick={() => store.setStep('context')} disabled={submitting}>
           Back
         </Button>
         <div className="flex flex-col items-end gap-1">
-          <Button disabled title="The AI valuation is wired up in the next phase.">
+          <Button
+            onClick={onSubmit}
+            loading={submitting}
+            disabled={needsPayment}
+            title={needsPayment ? 'Payment checkout arrives in Phase 3.' : undefined}
+          >
             {needsPayment ? 'Pay ₹99 & value artwork' : 'Get my valuation'}
           </Button>
-          <span className="font-body text-xs text-muted">AI valuation arrives in Phase 2.</span>
+          {needsPayment ? (
+            <span className="font-body text-xs text-muted">
+              Payment checkout arrives in Phase 3.
+            </span>
+          ) : null}
         </div>
       </div>
     </div>

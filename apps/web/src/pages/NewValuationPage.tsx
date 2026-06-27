@@ -1,43 +1,97 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { StepIndicator } from '../components/valuation/StepIndicator';
 import { UploadStep } from '../components/valuation/UploadStep';
 import { ContextStep } from '../components/valuation/ContextStep';
 import { ReviewStep } from '../components/valuation/ReviewStep';
+import { ProcessingStep } from '../components/valuation/ProcessingStep';
+import { ResultStep } from '../components/valuation/ResultStep';
 import { useValuationStore } from '../store/valuationStore';
+import { useAuth } from '../hooks/useAuth';
+import { submitValuation } from '../lib/valuation';
 
 /**
- * The valuation wizard (Phase 2, steps 1–3). Renders the active step from the
- * Zustand store. Resets the draft when the page first mounts so each visit
- * starts clean.
+ * The valuation wizard. Renders the active step from the Zustand store and owns
+ * the submission mutation (upload → server valuation → result).
  */
 export function NewValuationPage() {
-  const { step, reset } = useValuationStore();
+  const store = useValuationStore();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  // Start each new visit from a clean draft.
+  // Start each visit from a clean draft.
   useEffect(() => {
-    reset();
-  }, [reset]);
+    store.reset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error('You must be signed in.');
+      if (!store.imageFile) throw new Error('Please choose an image first.');
+      return submitValuation({
+        imageFile: store.imageFile,
+        userId: user.id,
+        artistKnown: store.artistKnown,
+        artistName: store.artistName,
+        tradition: store.tradition,
+        medium: store.medium,
+        dimensions: store.dimensions,
+        yearCreated: store.yearCreated,
+        condition: store.condition,
+        provenanceNotes: store.provenanceNotes,
+      });
+    },
+    onMutate: () => store.setStep('processing'),
+    onSuccess: (result) => {
+      store.setResult(result);
+      store.setStep('result');
+      void queryClient.invalidateQueries({ queryKey: ['valuations'] });
+      void queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+    onError: () => store.setStep('review'),
+  });
+
+  const submitError = mutation.isError
+    ? mutation.error instanceof Error
+      ? mutation.error.message
+      : 'Something went wrong generating your valuation.'
+    : null;
+
+  const showWizardChrome = store.step !== 'result';
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-10">
-      <div className="mb-8 flex items-center justify-between">
-        <Link to="/dashboard" className="font-body text-sm text-muted hover:text-ink">
-          ← Dashboard
-        </Link>
-        <StepIndicator current={step} />
-      </div>
+      {showWizardChrome ? (
+        <div className="mb-8 flex items-center justify-between print:hidden">
+          <Link to="/dashboard" className="font-body text-sm text-muted hover:text-ink">
+            ← Dashboard
+          </Link>
+          {store.step !== 'processing' ? <StepIndicator current={store.step} /> : null}
+        </div>
+      ) : null}
 
-      <h1 className="font-heading text-3xl text-ink">
-        {step === 'upload' && 'Upload your artwork'}
-        {step === 'context' && 'Tell us about the work'}
-        {step === 'review' && 'Review your submission'}
-      </h1>
+      {showWizardChrome && store.step !== 'processing' ? (
+        <h1 className="font-heading text-3xl text-ink">
+          {store.step === 'upload' && 'Upload your artwork'}
+          {store.step === 'context' && 'Tell us about the work'}
+          {store.step === 'review' && 'Review your submission'}
+        </h1>
+      ) : null}
 
       <div className="mt-8">
-        {step === 'upload' && <UploadStep />}
-        {step === 'context' && <ContextStep />}
-        {step === 'review' && <ReviewStep />}
+        {store.step === 'upload' && <UploadStep />}
+        {store.step === 'context' && <ContextStep />}
+        {store.step === 'review' && (
+          <ReviewStep
+            onSubmit={() => mutation.mutate()}
+            submitting={mutation.isPending}
+            error={submitError}
+          />
+        )}
+        {store.step === 'processing' && <ProcessingStep />}
+        {store.step === 'result' && <ResultStep />}
       </div>
     </main>
   );
