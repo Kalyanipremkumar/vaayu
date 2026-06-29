@@ -2,12 +2,12 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { FREE_VALUATION_LIMIT } from '@vaayu/shared';
 import { Button } from '../components/Button';
 import { TextField } from '../components/TextField';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { supabase } from '../lib/supabase';
+import { env } from '../lib/env';
 import { updatePassword } from '../lib/auth';
 import { listValuations } from '../lib/valuations';
 
@@ -47,7 +47,7 @@ export function SettingsPage() {
     if (profile?.fullName) setFullName(profile.fullName);
   }, [profile?.fullName]);
 
-  const freeRemaining = Math.max(0, FREE_VALUATION_LIMIT - (profile?.freeValuationsUsed ?? 0));
+  const freeRemaining = Math.max(0, env.freeValuationLimit - (profile?.freeValuationsUsed ?? 0));
 
   async function saveProfile(e: FormEvent) {
     e.preventDefault();
@@ -168,7 +168,7 @@ export function SettingsPage() {
             <span className="font-medium text-ink">
               {t('settings.freeRemainingValue', {
                 remaining: freeRemaining,
-                total: FREE_VALUATION_LIMIT,
+                total: env.freeValuationLimit,
               })}
             </span>
           </p>

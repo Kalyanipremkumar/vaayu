@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FREE_VALUATION_LIMIT, TRADITIONS, MEDIUMS } from '@vaayu/shared';
+import { TRADITIONS, MEDIUMS } from '@vaayu/shared';
 import { Button } from '../Button';
 import { useValuationStore } from '../../store/valuationStore';
 import { useProfile } from '../../hooks/useProfile';
 import { useAuth } from '../../hooks/useAuth';
+import { env } from '../../lib/env';
 import { payForValuation, type RazorpayPayment } from '../../lib/payments';
 
 const CONDITION_LABEL_KEYS: Record<string, string> = {
@@ -49,7 +50,7 @@ export function ReviewStep({ onSubmit, submitting, error }: ReviewStepProps) {
   const [payError, setPayError] = useState<string | null>(null);
 
   const used = profile?.freeValuationsUsed ?? 0;
-  const remaining = Math.max(0, FREE_VALUATION_LIMIT - used);
+  const remaining = Math.max(0, env.freeValuationLimit - used);
   const needsPayment = remaining === 0;
 
   async function handlePayAndSubmit() {
@@ -111,11 +112,11 @@ export function ReviewStep({ onSubmit, submitting, error }: ReviewStepProps) {
       <div className="rounded-md border border-border bg-gold/5 p-4">
         {needsPayment ? (
           <p className="font-body text-sm text-ink">
-            {t('wizard.paywall', { total: FREE_VALUATION_LIMIT })}
+            {t('wizard.paywall', { total: env.freeValuationLimit })}
           </p>
         ) : (
           <p className="font-body text-sm text-ink">
-            {t('wizard.freeRemaining', { count: remaining, total: FREE_VALUATION_LIMIT })}
+            {t('wizard.freeRemaining', { count: remaining, total: env.freeValuationLimit })}
           </p>
         )}
       </div>

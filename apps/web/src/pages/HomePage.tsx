@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Trans, useTranslation } from 'react-i18next';
-import { FREE_VALUATION_LIMIT } from '@vaayu/shared';
 import { Button } from '../components/Button';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { ModeToggle } from '../components/ModeToggle';
 import { useAppMode } from '../store/appModeStore';
+import { env } from '../lib/env';
 
 /**
  * Landing page. A dark ink hero with gold accents over Vaayu's cream canvas,
@@ -74,7 +74,7 @@ export function HomePage() {
           <p className="mt-6 font-body text-xs text-cream/40">
             {isArtist
               ? t('landingArtist.freeNote')
-              : t('landing.freeNote', { count: FREE_VALUATION_LIMIT })}
+              : t('landing.freeNote', { count: env.freeValuationLimit })}
           </p>
         </section>
 

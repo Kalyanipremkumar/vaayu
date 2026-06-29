@@ -18,6 +18,14 @@ const MODEL = Deno.env.get('VAAYU_CLAUDE_MODEL') ?? 'claude-sonnet-4-6';
 const RATE_LIMIT_PER_MINUTE = 10;
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
+// Free valuations per user before payment is required. Override at runtime with
+// the VAAYU_FREE_VALUATION_LIMIT function secret (no redeploy needed); falls back
+// to the shared default. Read per-request so dashboard changes take effect live.
+function freeValuationLimit(): number {
+  const n = Number(Deno.env.get('VAAYU_FREE_VALUATION_LIMIT'));
+  return Number.isInteger(n) && n >= 0 ? n : FREE_VALUATION_LIMIT;
+}
+
 // Purpose-specific guidance appended to the prompt. Mirrors VALUATION_PURPOSES
 // in @vaayu/shared (kept inline here to avoid re-bundling for one feature).
 const PURPOSE_INSTRUCTIONS: Record<string, string> = {
@@ -221,7 +229,7 @@ Deno.serve(async (req: Request) => {
     if (profileError) return json({ error: 'Could not load your profile.' }, 500);
 
     freeUsed = profile?.free_valuations_used ?? 0;
-    if (freeUsed >= FREE_VALUATION_LIMIT) {
+    if (freeUsed >= freeValuationLimit()) {
       // Free quota exhausted — require a verified Razorpay payment.
       const rzpSecret = Deno.env.get('RAZORPAY_KEY_SECRET');
       if (!rzpSecret) {
