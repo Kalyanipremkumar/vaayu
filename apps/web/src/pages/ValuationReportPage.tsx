@@ -1,14 +1,22 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { VALUATION_PURPOSES } from '@vaayu/shared';
 import { Button } from '../components/Button';
 import { ValuationReport } from '../components/valuation/ValuationReport';
 import { useValuation } from '../hooks/useValuations';
 
+const PURPOSE_LABEL_KEYS: Record<string, string> = {
+  fair_market: 'wizard.purposeFairMarket',
+  insurance: 'wizard.purposeInsurance',
+  auction: 'wizard.purposeAuction',
+};
+
 /**
  * View a single saved valuation report (from history) and re-download its PDF.
  */
 export function ValuationReportPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { data: record, isLoading, isError } = useValuation(id);
   const [pdfBusy, setPdfBusy] = useState(false);
@@ -36,7 +44,7 @@ export function ValuationReportPage() {
         imageUrl: record.imageUrl,
       });
     } catch (err) {
-      setPdfError(err instanceof Error ? err.message : 'Could not generate the PDF.');
+      setPdfError(err instanceof Error ? err.message : t('wizard.pdfError'));
     } finally {
       setPdfBusy(false);
     }
@@ -45,30 +53,36 @@ export function ValuationReportPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-10">
       <Link to="/dashboard" className="font-body text-sm text-muted hover:text-ink">
-        ← Your valuations
+        ← {t('report.yourValuations')}
       </Link>
 
       <div className="mt-8">
         {isLoading ? (
-          <p className="py-12 text-center font-body text-sm text-muted">Loading report…</p>
+          <p className="py-12 text-center font-body text-sm text-muted">{t('report.loading')}</p>
         ) : isError || !record ? (
-          <p className="py-12 text-center font-body text-sm text-red-700">
-            This valuation could not be found.
-          </p>
+          <p className="py-12 text-center font-body text-sm text-red-700">{t('report.notFound')}</p>
         ) : (
           <div className="flex flex-col gap-8">
             <ValuationReport
               result={record.result}
               imageUrl={record.imageUrl}
-              purposeLabel={VALUATION_PURPOSES.find((p) => p.key === record.purpose)?.label}
+              purposeLabel={
+                record.purpose
+                  ? t(
+                      PURPOSE_LABEL_KEYS[record.purpose] ??
+                        VALUATION_PURPOSES.find((p) => p.key === record.purpose)?.label ??
+                        '',
+                    )
+                  : undefined
+              }
             />
             <div className="flex flex-col gap-2 border-t border-border pt-6">
               <div className="flex flex-wrap gap-3">
                 <Button onClick={handleDownloadPdf} loading={pdfBusy}>
-                  Download PDF report
+                  {t('wizard.downloadPdf')}
                 </Button>
                 <Link to="/valuations/new">
-                  <Button variant="outline">New valuation</Button>
+                  <Button variant="outline">{t('dashboard.newValuation')}</Button>
                 </Link>
               </div>
               {pdfError ? <p className="font-body text-sm text-red-700">{pdfError}</p> : null}

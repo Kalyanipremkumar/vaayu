@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AuthLayout } from '../components/AuthLayout';
 import { Button } from '../components/Button';
 import { TextField } from '../components/TextField';
@@ -12,6 +13,7 @@ const MIN_PASSWORD_LENGTH = 8;
  * recovery session from the link, so we can call updateUser directly.
  */
 export function ResetPasswordPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -22,11 +24,11 @@ export function ResetPasswordPage() {
     e.preventDefault();
     setError(null);
     if (password.length < MIN_PASSWORD_LENGTH) {
-      setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+      setError(t('auth.minPassword', { count: MIN_PASSWORD_LENGTH }));
       return;
     }
     if (password !== confirm) {
-      setError('Passwords do not match.');
+      setError(t('auth.passwordMismatch'));
       return;
     }
     setLoading(true);
@@ -34,17 +36,17 @@ export function ResetPasswordPage() {
       await updatePassword(password);
       navigate('/dashboard', { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not update the password.');
+      setError(err instanceof Error ? err.message : t('auth.updatePasswordFailed'));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <AuthLayout title="Set a new password">
+    <AuthLayout title={t('auth.resetTitle')}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <TextField
-          label="New password"
+          label={t('auth.newPassword')}
           name="password"
           type="password"
           autoComplete="new-password"
@@ -53,7 +55,7 @@ export function ResetPasswordPage() {
           onChange={(e) => setPassword(e.target.value)}
         />
         <TextField
-          label="Confirm password"
+          label={t('auth.confirmPassword')}
           name="confirm"
           type="password"
           autoComplete="new-password"
@@ -63,7 +65,7 @@ export function ResetPasswordPage() {
         />
         {error ? <p className="font-body text-sm text-red-700">{error}</p> : null}
         <Button type="submit" loading={loading}>
-          Update password
+          {t('auth.updatePassword')}
         </Button>
       </form>
     </AuthLayout>

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AuthLayout } from '../components/AuthLayout';
 import { Button } from '../components/Button';
 import { TextField } from '../components/TextField';
@@ -7,6 +8,7 @@ import { signInWithEmail, signInWithGoogle } from '../lib/auth';
 
 /** Email/password + Google sign-in. */
 export function LoginPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,7 +23,7 @@ export function LoginPage() {
       await signInWithEmail(email, password);
       navigate('/dashboard', { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not sign in.');
+      setError(err instanceof Error ? err.message : t('auth.signInFailed'));
     } finally {
       setLoading(false);
     }
@@ -32,26 +34,26 @@ export function LoginPage() {
     try {
       await signInWithGoogle();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Google sign-in failed.');
+      setError(err instanceof Error ? err.message : t('auth.googleFailed'));
     }
   }
 
   return (
     <AuthLayout
-      title="Welcome back"
-      subtitle="Sign in to value your next piece."
+      title={t('auth.loginTitle')}
+      subtitle={t('auth.loginSubtitle')}
       footer={
         <>
-          New to Vaayu?{' '}
+          {t('auth.noAccount')}{' '}
           <Link to="/signup" className="text-ink underline underline-offset-4">
-            Create an account
+            {t('auth.createAccount')}
           </Link>
         </>
       }
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <TextField
-          label="Email"
+          label={t('common.email')}
           name="email"
           type="email"
           autoComplete="email"
@@ -60,7 +62,7 @@ export function LoginPage() {
           onChange={(e) => setEmail(e.target.value)}
         />
         <TextField
-          label="Password"
+          label={t('common.password')}
           name="password"
           type="password"
           autoComplete="current-password"
@@ -74,22 +76,24 @@ export function LoginPage() {
             to="/forgot-password"
             className="font-body text-xs text-muted underline underline-offset-4 hover:text-ink"
           >
-            Forgot password?
+            {t('auth.forgotPassword')}
           </Link>
         </div>
         <Button type="submit" loading={loading}>
-          Sign in
+          {t('common.signIn')}
         </Button>
       </form>
 
       <div className="my-5 flex items-center gap-3">
         <span className="h-px flex-1 bg-border" />
-        <span className="font-body text-xs uppercase tracking-widest text-muted">or</span>
+        <span className="font-body text-xs uppercase tracking-widest text-muted">
+          {t('auth.or')}
+        </span>
         <span className="h-px flex-1 bg-border" />
       </div>
 
       <Button type="button" variant="outline" className="w-full" onClick={handleGoogle}>
-        Continue with Google
+        {t('auth.continueGoogle')}
       </Button>
     </AuthLayout>
   );

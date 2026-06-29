@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { formatInr, TRADITIONS } from '@vaayu/shared';
 import { Button } from '../components/Button';
 import { SelectField } from '../components/SelectField';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { useAuth } from '../hooks/useAuth';
 import { useValuations } from '../hooks/useValuations';
 import { signOut } from '../lib/auth';
@@ -22,6 +24,7 @@ function formatDate(iso: string): string {
 
 /** One valuation in the history list. */
 function ValuationCard({ record }: { record: ValuationRecord }) {
+  const { t } = useTranslation();
   return (
     <Link
       to={`/valuations/${record.id}`}
@@ -39,7 +42,8 @@ function ValuationCard({ record }: { record: ValuationRecord }) {
       <div className="min-w-0 flex-1">
         <p className="truncate font-heading text-lg text-ink">{traditionLabel(record.tradition)}</p>
         <p className="font-body text-xs text-muted">
-          {formatDate(record.createdAt)} · Confidence {Math.round(record.result.confidenceScore)}
+          {formatDate(record.createdAt)} · {t('dashboard.confidence')}{' '}
+          {Math.round(record.result.confidenceScore)}
         </p>
       </div>
       <p className="shrink-0 font-heading text-lg text-gold">
@@ -54,6 +58,7 @@ function ValuationCard({ record }: { record: ValuationRecord }) {
  * and a stats summary, plus the entry point to a new valuation.
  */
 export function DashboardPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data: valuations, isLoading, isError } = useValuations();
@@ -62,10 +67,13 @@ export function DashboardPage() {
   const traditionsPresent = useMemo(() => {
     const keys = new Set((valuations ?? []).map((v) => v.tradition).filter(Boolean));
     return [
-      { value: 'all', label: 'All traditions' },
-      ...TRADITIONS.filter((t) => keys.has(t.key)).map((t) => ({ value: t.key, label: t.label })),
+      { value: 'all', label: t('dashboard.allTraditions') },
+      ...TRADITIONS.filter((tr) => keys.has(tr.key)).map((tr) => ({
+        value: tr.key,
+        label: tr.label,
+      })),
     ];
-  }, [valuations]);
+  }, [valuations, t]);
 
   const filtered = useMemo(
     () => (valuations ?? []).filter((v) => tradition === 'all' || v.tradition === tradition),
@@ -87,22 +95,23 @@ export function DashboardPage() {
       <header className="flex items-start justify-between border-b border-border pb-6">
         <div>
           <p className="font-body text-sm uppercase tracking-[0.2em] text-gold">Vaayu</p>
-          <h1 className="mt-1 font-heading text-3xl text-ink">Your valuations</h1>
+          <h1 className="mt-1 font-heading text-3xl text-ink">{t('dashboard.title')}</h1>
           {valuations && valuations.length > 0 ? (
             <p className="mt-1 font-body text-sm text-muted">
-              {valuations.length} valued · {formatInr(totalMid)} total mid-value
+              {t('dashboard.stats', { count: valuations.length, total: formatInr(totalMid) })}
             </p>
           ) : null}
         </div>
         <div className="flex items-center gap-4">
+          <LanguageSwitcher />
           <Link
             to="/settings"
             className="font-body text-sm text-muted underline-offset-4 hover:text-ink hover:underline"
           >
-            Settings
+            {t('common.settings')}
           </Link>
           <Button variant="outline" onClick={handleSignOut}>
-            Sign out
+            {t('common.signOut')}
           </Button>
         </div>
       </header>
@@ -112,12 +121,12 @@ export function DashboardPage() {
           to="/valuations/new"
           className="inline-flex rounded-full bg-ink px-6 py-3 font-body text-sm font-medium text-cream transition-colors hover:bg-ink/90"
         >
-          + New valuation
+          {t('dashboard.newValuationPlus')}
         </Link>
         {valuations && valuations.length > 0 ? (
           <div className="w-56">
             <SelectField
-              label="Filter"
+              label={t('dashboard.filter')}
               name="tradition-filter"
               options={traditionsPresent}
               value={tradition}
@@ -129,22 +138,18 @@ export function DashboardPage() {
 
       <div className="mt-8">
         {isLoading ? (
-          <p className="py-12 text-center font-body text-sm text-muted">Loading your valuations…</p>
+          <p className="py-12 text-center font-body text-sm text-muted">{t('dashboard.loading')}</p>
         ) : isError ? (
-          <p className="py-12 text-center font-body text-sm text-red-700">
-            Could not load your valuations. Please refresh.
-          </p>
+          <p className="py-12 text-center font-body text-sm text-red-700">{t('dashboard.error')}</p>
         ) : !valuations || valuations.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-12 text-center">
-            <p className="font-heading text-xl text-ink">No valuations yet</p>
-            <p className="mt-2 font-body text-sm text-muted">
-              Upload an artwork to get your first AI-powered valuation.
-            </p>
+            <p className="font-heading text-xl text-ink">{t('dashboard.emptyTitle')}</p>
+            <p className="mt-2 font-body text-sm text-muted">{t('dashboard.emptyBody')}</p>
             <Link
               to="/valuations/new"
               className="mt-6 inline-flex rounded-full bg-ink px-6 py-3 font-body text-sm font-medium text-cream transition-colors hover:bg-ink/90"
             >
-              New valuation
+              {t('dashboard.newValuation')}
             </Link>
           </div>
         ) : (
@@ -156,7 +161,9 @@ export function DashboardPage() {
         )}
       </div>
 
-      <p className="mt-10 font-body text-xs text-muted">Signed in as {user?.email}</p>
+      <p className="mt-10 font-body text-xs text-muted">
+        {t('dashboard.signedInAs', { email: user?.email })}
+      </p>
     </main>
   );
 }

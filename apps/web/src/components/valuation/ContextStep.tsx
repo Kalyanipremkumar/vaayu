@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   MEDIUMS,
   TRADITIONS,
@@ -14,30 +15,43 @@ import { useValuationStore } from '../../store/valuationStore';
 
 const traditionOptions: SelectOption[] = TRADITIONS.map((t) => ({ value: t.key, label: t.label }));
 const mediumOptions: SelectOption[] = MEDIUMS.map((m) => ({ value: m.key, label: m.label }));
-const conditionOptions: SelectOption[] = [
-  { value: 'excellent', label: 'Excellent' },
-  { value: 'good', label: 'Good' },
-  { value: 'fair', label: 'Fair' },
-  { value: 'poor', label: 'Poor' },
-];
-const purposeOptions: SelectOption[] = VALUATION_PURPOSES.map((p) => ({
-  value: p.key,
-  label: p.label,
-}));
+
+const CONDITION_KEYS: ArtworkCondition[] = ['excellent', 'good', 'fair', 'poor'];
+const CONDITION_LABEL_KEYS: Record<ArtworkCondition, string> = {
+  excellent: 'wizard.condExcellent',
+  good: 'wizard.condGood',
+  fair: 'wizard.condFair',
+  poor: 'wizard.condPoor',
+};
+const PURPOSE_LABEL_KEYS: Record<ValuationPurpose, string> = {
+  fair_market: 'wizard.purposeFairMarket',
+  insurance: 'wizard.purposeInsurance',
+  auction: 'wizard.purposeAuction',
+};
 
 /** Step 2 — collect the context the pricing engine needs. */
 export function ContextStep() {
+  const { t } = useTranslation();
   const store = useValuationStore();
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const conditionOptions: SelectOption[] = CONDITION_KEYS.map((key) => ({
+    value: key,
+    label: t(CONDITION_LABEL_KEYS[key]),
+  }));
+  const purposeOptions: SelectOption[] = VALUATION_PURPOSES.map((p) => ({
+    value: p.key,
+    label: t(PURPOSE_LABEL_KEYS[p.key as ValuationPurpose] ?? p.label),
+  }));
+
   function validateAndContinue() {
     const next: Record<string, string> = {};
-    if (!store.tradition) next.tradition = 'Please choose a tradition or style.';
-    if (!store.medium) next.medium = 'Please choose a medium.';
-    if (!(store.dimensions.heightCm > 0)) next.height = 'Enter a height greater than 0.';
-    if (!(store.dimensions.widthCm > 0)) next.width = 'Enter a width greater than 0.';
+    if (!store.tradition) next.tradition = t('wizard.errTradition');
+    if (!store.medium) next.medium = t('wizard.errMedium');
+    if (!(store.dimensions.heightCm > 0)) next.height = t('wizard.errHeight');
+    if (!(store.dimensions.widthCm > 0)) next.width = t('wizard.errWidth');
     if (store.artistKnown && !store.artistName.trim()) {
-      next.artistName = 'Enter the artist’s name, or tick “I don’t know”.';
+      next.artistName = t('wizard.errArtist');
     }
     setErrors(next);
     if (Object.keys(next).length === 0) store.setStep('review');
@@ -46,9 +60,9 @@ export function ContextStep() {
   return (
     <div className="flex flex-col gap-5">
       <SelectField
-        label="Tradition / style"
+        label={t('wizard.fieldTradition')}
         name="tradition"
-        placeholder="Select a tradition"
+        placeholder={t('wizard.selectTradition')}
         options={traditionOptions}
         value={store.tradition}
         error={errors.tradition}
@@ -56,9 +70,9 @@ export function ContextStep() {
       />
 
       <SelectField
-        label="Medium"
+        label={t('wizard.fieldMedium')}
         name="medium"
-        placeholder="Select a medium"
+        placeholder={t('wizard.selectMedium')}
         options={mediumOptions}
         value={store.medium}
         error={errors.medium}
@@ -67,7 +81,7 @@ export function ContextStep() {
 
       <div className="grid grid-cols-2 gap-4">
         <TextField
-          label="Height (cm)"
+          label={t('wizard.fieldHeight')}
           name="height"
           type="number"
           min={0}
@@ -81,7 +95,7 @@ export function ContextStep() {
           }
         />
         <TextField
-          label="Width (cm)"
+          label={t('wizard.fieldWidth')}
           name="width"
           type="number"
           min={0}
@@ -97,7 +111,7 @@ export function ContextStep() {
       </div>
 
       <TextField
-        label="Year created (optional)"
+        label={t('wizard.fieldYear')}
         name="year"
         type="number"
         min={0}
@@ -109,7 +123,7 @@ export function ContextStep() {
       />
 
       <SelectField
-        label="Condition"
+        label={t('wizard.fieldCondition')}
         name="condition"
         options={conditionOptions}
         value={store.condition}
@@ -117,7 +131,7 @@ export function ContextStep() {
       />
 
       <SelectField
-        label="Valuation for"
+        label={t('wizard.fieldPurpose')}
         name="purpose"
         options={purposeOptions}
         value={store.purpose}
@@ -126,12 +140,12 @@ export function ContextStep() {
 
       <div className="flex flex-col gap-2">
         <TextField
-          label="Artist name"
+          label={t('wizard.fieldArtist')}
           name="artistName"
           value={store.artistName}
           disabled={!store.artistKnown}
           error={errors.artistName}
-          placeholder={store.artistKnown ? '' : 'Unknown'}
+          placeholder={store.artistKnown ? '' : t('wizard.unknown')}
           onChange={(e) => store.update({ artistName: e.target.value })}
         />
         <label className="flex items-center gap-2 font-body text-sm text-muted">
@@ -146,23 +160,23 @@ export function ContextStep() {
             }
             className="h-4 w-4 rounded border-border text-ink focus:ring-gold"
           />
-          I don’t know the artist
+          {t('wizard.dontKnowArtist')}
         </label>
       </div>
 
       <TextAreaField
-        label="Provenance notes (optional)"
+        label={t('wizard.fieldProvenance')}
         name="provenance"
-        hint="Acquisition history, exhibitions, certificates — anything that documents the work."
+        hint={t('wizard.provenanceHint')}
         value={store.provenanceNotes}
         onChange={(e) => store.update({ provenanceNotes: e.target.value })}
       />
 
       <div className="mt-2 flex justify-between">
         <Button variant="ghost" onClick={() => store.setStep('upload')}>
-          Back
+          {t('common.back')}
         </Button>
-        <Button onClick={validateAndContinue}>Continue to review</Button>
+        <Button onClick={validateAndContinue}>{t('wizard.continueReview')}</Button>
       </div>
     </div>
   );

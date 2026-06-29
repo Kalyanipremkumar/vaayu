@@ -1,38 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import type { UserRole } from '@vaayu/shared';
 import { Button } from '../components/Button';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 
-const ROLES: { value: UserRole; label: string; desc: string }[] = [
-  {
-    value: 'individual',
-    label: 'Individual',
-    desc: 'Collector or enthusiast valuing personal pieces.',
-  },
-  {
-    value: 'artist',
-    label: 'Artist',
-    desc: 'Pricing and understanding the value of your own work.',
-  },
-  { value: 'gallery', label: 'Gallery', desc: 'Valuing inventory and advising clients.' },
-  {
-    value: 'enterprise',
-    label: 'Enterprise',
-    desc: 'Auction house, insurer, or institution at scale.',
-  },
-];
-
-const LAYERS = [
-  { n: '01', t: 'Base value', d: 'A market benchmark from the tradition and medium.' },
-  { n: '02', t: 'Artist multiplier', d: 'Recognition tier, from emerging to blue-chip.' },
-  { n: '03', t: 'Work adjustment', d: 'Condition, size, materials, rarity, and provenance.' },
-];
+const ROLE_VALUES: UserRole[] = ['individual', 'artist', 'gallery', 'enterprise'];
 
 /** First-run onboarding: pick a role, then a quick methodology tour. */
 export function OnboardingPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -40,6 +19,17 @@ export function OnboardingPage() {
   const [role, setRole] = useState<UserRole>('individual');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const roles = ROLE_VALUES.map((value) => ({
+    value,
+    label: t(`onboarding.${value}`),
+    desc: t(`onboarding.${value}Desc`),
+  }));
+  const layers = [1, 2, 3].map((n) => ({
+    n: String(n).padStart(2, '0'),
+    t: t(`onboarding.l${n}t`),
+    d: t(`onboarding.l${n}b`),
+  }));
 
   async function finish() {
     if (!user) return;
@@ -54,7 +44,7 @@ export function OnboardingPage() {
       await queryClient.invalidateQueries({ queryKey: ['profile'] });
       navigate('/dashboard', { replace: true });
     } catch {
-      setError('Could not save. Please try again.');
+      setError(t('onboarding.saveError'));
     } finally {
       setBusy(false);
     }
@@ -69,13 +59,13 @@ export function OnboardingPage() {
       {step === 'role' ? (
         <>
           <h1 className="text-center font-heading text-4xl text-ink">
-            What’s your relationship to art?
+            {t('onboarding.roleTitle')}
           </h1>
           <p className="mt-2 text-center font-body text-sm text-muted">
-            We’ll tailor Vaayu to how you work.
+            {t('onboarding.roleLead')}
           </p>
           <div className="mt-8 flex flex-col gap-3">
-            {ROLES.map((r) => (
+            {roles.map((r) => (
               <button
                 key={r.value}
                 onClick={() => setRole(r.value)}
@@ -89,17 +79,19 @@ export function OnboardingPage() {
             ))}
           </div>
           <div className="mt-8 flex justify-end">
-            <Button onClick={() => setStep('tour')}>Continue</Button>
+            <Button onClick={() => setStep('tour')}>{t('common.continue')}</Button>
           </div>
         </>
       ) : (
         <>
-          <h1 className="text-center font-heading text-4xl text-ink">How Vaayu values art</h1>
+          <h1 className="text-center font-heading text-4xl text-ink">
+            {t('onboarding.tourTitle')}
+          </h1>
           <p className="mt-2 text-center font-body text-sm text-muted">
-            Every estimate is transparent — built from three layers you can see.
+            {t('onboarding.tourLead')}
           </p>
           <div className="mt-8 flex flex-col gap-3">
-            {LAYERS.map((l) => (
+            {layers.map((l) => (
               <div key={l.n} className="flex gap-4 rounded-xl border border-border p-4">
                 <span className="font-heading text-2xl text-gold">{l.n}</span>
                 <div>
@@ -114,10 +106,10 @@ export function OnboardingPage() {
           ) : null}
           <div className="mt-8 flex justify-between">
             <Button variant="ghost" onClick={() => setStep('role')}>
-              Back
+              {t('common.back')}
             </Button>
             <Button onClick={finish} loading={busy}>
-              Start valuing
+              {t('onboarding.start')}
             </Button>
           </div>
         </>

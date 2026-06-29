@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { FREE_VALUATION_LIMIT } from '@vaayu/shared';
 import { Button } from '../components/Button';
@@ -24,6 +25,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 
 /** Account settings — profile, password, usage, and data export. */
 export function SettingsPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { data: profile } = useProfile();
   const queryClient = useQueryClient();
@@ -59,9 +61,9 @@ export function SettingsPage() {
         .eq('id', user.id);
       if (error) throw error;
       await queryClient.invalidateQueries({ queryKey: ['profile'] });
-      setProfileMsg('Saved.');
+      setProfileMsg(t('settings.saved'));
     } catch {
-      setProfileMsg('Could not save. Please try again.');
+      setProfileMsg(t('settings.saveError'));
     } finally {
       setProfileBusy(false);
     }
@@ -72,11 +74,11 @@ export function SettingsPage() {
     setPwErr(null);
     setPwMsg(null);
     if (password.length < MIN_PASSWORD_LENGTH) {
-      setPwErr(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+      setPwErr(t('auth.minPassword', { count: MIN_PASSWORD_LENGTH }));
       return;
     }
     if (password !== confirm) {
-      setPwErr('Passwords do not match.');
+      setPwErr(t('auth.passwordMismatch'));
       return;
     }
     setPwBusy(true);
@@ -84,9 +86,9 @@ export function SettingsPage() {
       await updatePassword(password);
       setPassword('');
       setConfirm('');
-      setPwMsg('Password updated.');
+      setPwMsg(t('settings.pwUpdated'));
     } catch (err) {
-      setPwErr(err instanceof Error ? err.message : 'Could not update the password.');
+      setPwErr(err instanceof Error ? err.message : t('auth.updatePasswordFailed'));
     } finally {
       setPwBusy(false);
     }
@@ -129,23 +131,29 @@ export function SettingsPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-10">
       <Link to="/dashboard" className="font-body text-sm text-muted hover:text-ink">
-        ← Your valuations
+        ← {t('dashboard.title')}
       </Link>
-      <h1 className="mt-6 font-heading text-3xl text-ink">Settings</h1>
+      <h1 className="mt-6 font-heading text-3xl text-ink">{t('settings.title')}</h1>
 
       <div className="mt-8 flex flex-col gap-5">
-        <Card title="Profile">
+        <Card title={t('settings.profile')}>
           <form onSubmit={saveProfile} className="flex flex-col gap-4">
-            <TextField label="Email" name="email" value={user?.email ?? ''} disabled readOnly />
             <TextField
-              label="Full name"
+              label={t('common.email')}
+              name="email"
+              value={user?.email ?? ''}
+              disabled
+              readOnly
+            />
+            <TextField
+              label={t('common.fullName')}
               name="fullName"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
             />
             <div className="flex items-center gap-3">
               <Button type="submit" loading={profileBusy}>
-                Save
+                {t('settings.save')}
               </Button>
               {profileMsg ? (
                 <span className="font-body text-sm text-muted">{profileMsg}</span>
@@ -154,20 +162,25 @@ export function SettingsPage() {
           </form>
         </Card>
 
-        <Card title="Usage">
+        <Card title={t('settings.usage')}>
           <p className="font-body text-sm text-muted">
-            Free valuations remaining:{' '}
+            {t('settings.freeRemaining')}{' '}
             <span className="font-medium text-ink">
-              {freeRemaining} of {FREE_VALUATION_LIMIT}
+              {t('settings.freeRemainingValue', {
+                remaining: freeRemaining,
+                total: FREE_VALUATION_LIMIT,
+              })}
             </span>
           </p>
-          <p className="mt-1 font-body text-xs text-muted">Role: {profile?.role ?? 'individual'}</p>
+          <p className="mt-1 font-body text-xs text-muted">
+            {t('settings.role', { role: profile?.role ?? 'individual' })}
+          </p>
         </Card>
 
-        <Card title="Change password">
+        <Card title={t('settings.changePassword')}>
           <form onSubmit={changePassword} className="flex flex-col gap-4">
             <TextField
-              label="New password"
+              label={t('auth.newPassword')}
               name="newPassword"
               type="password"
               autoComplete="new-password"
@@ -175,7 +188,7 @@ export function SettingsPage() {
               onChange={(e) => setPassword(e.target.value)}
             />
             <TextField
-              label="Confirm password"
+              label={t('auth.confirmPassword')}
               name="confirmPassword"
               type="password"
               autoComplete="new-password"
@@ -185,25 +198,25 @@ export function SettingsPage() {
             {pwErr ? <p className="font-body text-sm text-red-700">{pwErr}</p> : null}
             <div className="flex items-center gap-3">
               <Button type="submit" loading={pwBusy}>
-                Update password
+                {t('auth.updatePassword')}
               </Button>
               {pwMsg ? <span className="font-body text-sm text-muted">{pwMsg}</span> : null}
             </div>
           </form>
         </Card>
 
-        <Card title="Your data">
-          <p className="font-body text-sm text-muted">Download all your valuations as JSON.</p>
+        <Card title={t('settings.yourData')}>
+          <p className="font-body text-sm text-muted">{t('settings.exportDesc')}</p>
           <div className="mt-4">
             <Button variant="outline" onClick={exportJson} loading={exportBusy}>
-              Export valuations (JSON)
+              {t('settings.exportBtn')}
             </Button>
           </div>
         </Card>
       </div>
 
       <p className="mt-10 font-body text-xs text-muted">
-        Need to leave?{' '}
+        {t('settings.leavePrompt')}{' '}
         <button
           className="underline underline-offset-4 hover:text-ink"
           onClick={async () => {
@@ -212,7 +225,7 @@ export function SettingsPage() {
             navigate('/login', { replace: true });
           }}
         >
-          Sign out
+          {t('common.signOut')}
         </button>
       </p>
     </main>

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { StepIndicator } from '../components/valuation/StepIndicator';
 import { UploadStep } from '../components/valuation/UploadStep';
@@ -17,6 +18,7 @@ import type { RazorpayPayment } from '../lib/payments';
  * the submission mutation (upload → server valuation → result).
  */
 export function NewValuationPage() {
+  const { t } = useTranslation();
   const store = useValuationStore();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -59,7 +61,7 @@ export function NewValuationPage() {
   const submitError = mutation.isError
     ? mutation.error instanceof Error
       ? mutation.error.message
-      : 'Something went wrong generating your valuation.'
+      : t('wizard.submitError')
     : null;
 
   const showWizardChrome = store.step !== 'result';
@@ -69,7 +71,7 @@ export function NewValuationPage() {
       {showWizardChrome ? (
         <div className="mb-8 flex items-center justify-between print:hidden">
           <Link to="/dashboard" className="font-body text-sm text-muted hover:text-ink">
-            ← Dashboard
+            ← {t('wizard.dashboard')}
           </Link>
           {store.step !== 'processing' ? <StepIndicator current={store.step} /> : null}
         </div>
@@ -77,9 +79,9 @@ export function NewValuationPage() {
 
       {showWizardChrome && store.step !== 'processing' ? (
         <h1 className="font-heading text-3xl text-ink">
-          {store.step === 'upload' && 'Upload your artwork'}
-          {store.step === 'context' && 'Tell us about the work'}
-          {store.step === 'review' && 'Review your submission'}
+          {store.step === 'upload' && t('wizard.titleUpload')}
+          {store.step === 'context' && t('wizard.titleContext')}
+          {store.step === 'review' && t('wizard.titleReview')}
         </h1>
       ) : null}
 

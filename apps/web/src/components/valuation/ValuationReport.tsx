@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   formatInr,
   formatInrRange,
@@ -15,22 +16,18 @@ interface ValuationReportProps {
 
 /** A single methodology layer card. */
 function LayerCard({
-  index,
-  title,
+  label,
   headline,
   rationale,
 }: {
-  index: number;
-  title: string;
+  label: string;
   headline: string;
   rationale: string;
 }) {
   return (
     <div className="border-t border-border py-5">
       <div className="flex items-baseline justify-between gap-4">
-        <p className="font-body text-sm uppercase tracking-wider text-gold">
-          Layer {index} · {title}
-        </p>
+        <p className="font-body text-sm uppercase tracking-wider text-gold">{label}</p>
         <p className="font-heading text-lg text-ink">{headline}</p>
       </div>
       <p className="mt-2 font-body text-sm leading-relaxed text-muted">{rationale}</p>
@@ -44,6 +41,7 @@ function LayerCard({
  * three methodology layers, comparables, and the full narrative report.
  */
 export function ValuationReport({ result, imageUrl, purposeLabel }: ValuationReportProps) {
+  const { t } = useTranslation();
   const { reasoning } = result;
   return (
     <article className="flex flex-col gap-8">
@@ -57,39 +55,40 @@ export function ValuationReport({ result, imageUrl, purposeLabel }: ValuationRep
 
       <header className="text-center">
         <p className="font-body text-sm uppercase tracking-[0.2em] text-muted">
-          {purposeLabel ? `Estimated ${purposeLabel.toLowerCase()}` : 'Estimated value'}
+          {purposeLabel
+            ? t('report.estimatedPurpose', { purpose: purposeLabel.toLowerCase() })
+            : t('report.estimatedValue')}
         </p>
         <p className="mt-2 font-heading text-4xl text-ink md:text-5xl">
           {formatInr(result.estimatedMidInr)}
         </p>
         <p className="mt-2 font-body text-sm text-muted">
-          Range {formatInrRange(result.estimatedLowInr, result.estimatedHighInr)}
+          {t('report.range', {
+            range: formatInrRange(result.estimatedLowInr, result.estimatedHighInr),
+          })}
         </p>
         <p className="mt-4 inline-flex items-center gap-2 rounded-md border border-border px-3 py-1 font-body text-xs text-ink">
-          Confidence {Math.round(result.confidenceScore)} / 100
+          {t('report.confidence', { score: Math.round(result.confidenceScore) })}
         </p>
       </header>
 
       <section>
-        <h2 className="font-heading text-2xl text-ink">How we got here</h2>
+        <h2 className="font-heading text-2xl text-ink">{t('report.howWeGotThere')}</h2>
         <div className="mt-2">
           <LayerCard
-            index={1}
-            title="Base value"
+            label={`${t('report.layer1')}`}
             headline={formatInr(reasoning.baseValue.amount)}
             rationale={reasoning.baseValue.rationale}
           />
           <LayerCard
-            index={2}
-            title="Artist multiplier"
+            label={`${t('report.layer2')}`}
             headline={`× ${reasoning.artistMultiplier.multiplier}${
               reasoning.artistMultiplier.tier ? ` · ${reasoning.artistMultiplier.tier}` : ''
             }`}
             rationale={reasoning.artistMultiplier.rationale}
           />
           <LayerCard
-            index={3}
-            title="Work adjustment"
+            label={`${t('report.layer3')}`}
             headline={`× ${reasoning.workAdjustment.multiplier}`}
             rationale={reasoning.workAdjustment.rationale}
           />
@@ -98,7 +97,7 @@ export function ValuationReport({ result, imageUrl, purposeLabel }: ValuationRep
 
       {reasoning.comparables?.length ? (
         <section>
-          <h2 className="font-heading text-2xl text-ink">Comparables</h2>
+          <h2 className="font-heading text-2xl text-ink">{t('report.comparables')}</h2>
           <ul className="mt-3 list-disc space-y-1 pl-5 font-body text-sm text-muted">
             {reasoning.comparables.map((c, i) => (
               <li key={i}>{c}</li>
@@ -109,7 +108,7 @@ export function ValuationReport({ result, imageUrl, purposeLabel }: ValuationRep
 
       {result.fullReport ? (
         <section>
-          <h2 className="font-heading text-2xl text-ink">Full report</h2>
+          <h2 className="font-heading text-2xl text-ink">{t('report.fullReport')}</h2>
           <p className="mt-3 whitespace-pre-wrap font-body text-sm leading-relaxed text-muted">
             {result.fullReport}
           </p>

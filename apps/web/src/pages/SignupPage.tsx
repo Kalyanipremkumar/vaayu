@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AuthLayout } from '../components/AuthLayout';
 import { Button } from '../components/Button';
 import { TextField } from '../components/TextField';
@@ -9,6 +10,7 @@ const MIN_PASSWORD_LENGTH = 8;
 
 /** Create an account with email/password (or Google). */
 export function SignupPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -21,7 +23,7 @@ export function SignupPage() {
     e.preventDefault();
     setError(null);
     if (password.length < MIN_PASSWORD_LENGTH) {
-      setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+      setError(t('auth.minPassword', { count: MIN_PASSWORD_LENGTH }));
       return;
     }
     setLoading(true);
@@ -31,10 +33,10 @@ export function SignupPage() {
       if (result.session) {
         navigate('/dashboard', { replace: true });
       } else {
-        setNotice('Check your inbox to confirm your email, then sign in.');
+        setNotice(t('auth.signupNotice'));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not create the account.');
+      setError(err instanceof Error ? err.message : t('auth.signupFailed'));
     } finally {
       setLoading(false);
     }
@@ -45,19 +47,19 @@ export function SignupPage() {
     try {
       await signInWithGoogle();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Google sign-in failed.');
+      setError(err instanceof Error ? err.message : t('auth.googleFailed'));
     }
   }
 
   return (
     <AuthLayout
-      title="Create your account"
-      subtitle="Your first three valuations are free."
+      title={t('auth.signupTitle')}
+      subtitle={t('auth.signupSubtitle')}
       footer={
         <>
-          Already have an account?{' '}
+          {t('auth.haveAccount')}{' '}
           <Link to="/login" className="text-ink underline underline-offset-4">
-            Sign in
+            {t('common.signIn')}
           </Link>
         </>
       }
@@ -69,7 +71,7 @@ export function SignupPage() {
       ) : null}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <TextField
-          label="Full name"
+          label={t('common.fullName')}
           name="fullName"
           autoComplete="name"
           required
@@ -77,7 +79,7 @@ export function SignupPage() {
           onChange={(e) => setFullName(e.target.value)}
         />
         <TextField
-          label="Email"
+          label={t('common.email')}
           name="email"
           type="email"
           autoComplete="email"
@@ -86,7 +88,7 @@ export function SignupPage() {
           onChange={(e) => setEmail(e.target.value)}
         />
         <TextField
-          label="Password"
+          label={t('common.password')}
           name="password"
           type="password"
           autoComplete="new-password"
@@ -96,18 +98,20 @@ export function SignupPage() {
         />
         {error ? <p className="font-body text-sm text-red-700">{error}</p> : null}
         <Button type="submit" loading={loading}>
-          Create account
+          {t('auth.createAccountBtn')}
         </Button>
       </form>
 
       <div className="my-5 flex items-center gap-3">
         <span className="h-px flex-1 bg-border" />
-        <span className="font-body text-xs uppercase tracking-widest text-muted">or</span>
+        <span className="font-body text-xs uppercase tracking-widest text-muted">
+          {t('auth.or')}
+        </span>
         <span className="h-px flex-1 bg-border" />
       </div>
 
       <Button type="button" variant="outline" className="w-full" onClick={handleGoogle}>
-        Continue with Google
+        {t('auth.continueGoogle')}
       </Button>
     </AuthLayout>
   );

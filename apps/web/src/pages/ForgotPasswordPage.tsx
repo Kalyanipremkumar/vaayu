@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AuthLayout } from '../components/AuthLayout';
 import { Button } from '../components/Button';
 import { TextField } from '../components/TextField';
@@ -7,6 +8,7 @@ import { sendPasswordReset } from '../lib/auth';
 
 /** Request a password-reset email. */
 export function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +22,7 @@ export function ForgotPasswordPage() {
       await sendPasswordReset(email);
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not send the reset email.');
+      setError(err instanceof Error ? err.message : t('auth.sendResetFailed'));
     } finally {
       setLoading(false);
     }
@@ -28,22 +30,22 @@ export function ForgotPasswordPage() {
 
   return (
     <AuthLayout
-      title="Reset your password"
-      subtitle={sent ? undefined : 'We’ll email you a secure link to set a new password.'}
+      title={t('auth.forgotTitle')}
+      subtitle={sent ? undefined : t('auth.forgotLead')}
       footer={
         <Link to="/login" className="text-ink underline underline-offset-4">
-          Back to sign in
+          {t('auth.backToSignIn')}
         </Link>
       }
     >
       {sent ? (
         <p className="rounded-md border border-border bg-gold/10 p-3 font-body text-sm text-ink">
-          If an account exists for {email}, a reset link is on its way. Check your inbox.
+          {t('auth.resetSent', { email })}
         </p>
       ) : (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <TextField
-            label="Email"
+            label={t('common.email')}
             name="email"
             type="email"
             autoComplete="email"
@@ -53,7 +55,7 @@ export function ForgotPasswordPage() {
           />
           {error ? <p className="font-body text-sm text-red-700">{error}</p> : null}
           <Button type="submit" loading={loading}>
-            Send reset link
+            {t('auth.sendResetLink')}
           </Button>
         </form>
       )}

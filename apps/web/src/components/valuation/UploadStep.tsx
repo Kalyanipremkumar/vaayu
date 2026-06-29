@@ -1,4 +1,5 @@
 import { useRef, useState, type DragEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '../Button';
 import { useValuationStore } from '../../store/valuationStore';
 import { validateImageFile } from '../../lib/upload';
@@ -9,6 +10,7 @@ import { validateImageFile } from '../../lib/upload';
  * upload to Supabase Storage happens when the valuation is submitted.
  */
 export function UploadStep() {
+  const { t } = useTranslation();
   const { imagePreviewUrl, update, setStep } = useValuationStore();
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -44,9 +46,9 @@ export function UploadStep() {
           />
           <div className="flex gap-3">
             <Button variant="outline" onClick={() => inputRef.current?.click()}>
-              Choose a different image
+              {t('wizard.chooseDifferent')}
             </Button>
-            <Button onClick={() => setStep('context')}>Use this image</Button>
+            <Button onClick={() => setStep('context')}>{t('wizard.useImage')}</Button>
           </div>
         </div>
       ) : (
@@ -65,10 +67,8 @@ export function UploadStep() {
             dragging ? 'border-gold bg-gold/5' : 'border-border bg-cream'
           }`}
         >
-          <p className="font-heading text-xl text-ink">Drop your artwork here</p>
-          <p className="mt-2 font-body text-sm text-muted">
-            or click to browse — JPG, PNG, or WebP, up to 10&nbsp;MB
-          </p>
+          <p className="font-heading text-xl text-ink">{t('wizard.drop')}</p>
+          <p className="mt-2 font-body text-sm text-muted">{t('wizard.browse')}</p>
         </div>
       )}
 
@@ -89,12 +89,12 @@ export function UploadStep() {
       {!imagePreviewUrl ? (
         <div className="rounded-lg border border-border bg-gold/[0.04] p-4">
           <p className="font-body text-xs font-medium uppercase tracking-wider text-gold">
-            For the most accurate valuation
+            {t('wizard.tipsTitle')}
           </p>
           <ul className="mt-2 space-y-1 font-body text-sm text-muted">
-            <li>· Shoot the work flat-on in even, natural light — avoid glare and shadows.</li>
-            <li>· Fill the frame with the whole piece; keep the full edges visible.</li>
-            <li>· Use the highest resolution you can; keep colours true to the original.</li>
+            <li>· {t('wizard.tip1')}</li>
+            <li>· {t('wizard.tip2')}</li>
+            <li>· {t('wizard.tip3')}</li>
           </ul>
         </div>
       ) : null}

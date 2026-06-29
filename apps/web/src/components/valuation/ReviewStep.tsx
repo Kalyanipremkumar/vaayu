@@ -1,10 +1,18 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FREE_VALUATION_LIMIT, TRADITIONS, MEDIUMS } from '@vaayu/shared';
 import { Button } from '../Button';
 import { useValuationStore } from '../../store/valuationStore';
 import { useProfile } from '../../hooks/useProfile';
 import { useAuth } from '../../hooks/useAuth';
 import { payForValuation, type RazorpayPayment } from '../../lib/payments';
+
+const CONDITION_LABEL_KEYS: Record<string, string> = {
+  excellent: 'wizard.condExcellent',
+  good: 'wizard.condGood',
+  fair: 'wizard.condFair',
+  poor: 'wizard.condPoor',
+};
 
 function labelFor(list: readonly { key: string; label: string }[], key: string): string {
   return list.find((item) => item.key === key)?.label ?? key;
@@ -33,6 +41,7 @@ interface ReviewStepProps {
  * payment is passed to the server, which re-checks the signature before valuing.
  */
 export function ReviewStep({ onSubmit, submitting, error }: ReviewStepProps) {
+  const { t } = useTranslation();
   const store = useValuationStore();
   const { data: profile } = useProfile();
   const { user } = useAuth();
@@ -50,7 +59,7 @@ export function ReviewStep({ onSubmit, submitting, error }: ReviewStepProps) {
       const payment = await payForValuation(user?.email);
       onSubmit(payment);
     } catch (err) {
-      setPayError(err instanceof Error ? err.message : 'Payment did not complete.');
+      setPayError(err instanceof Error ? err.message : t('wizard.paymentCancelled'));
     } finally {
       setPaying(false);
     }
@@ -67,24 +76,34 @@ export function ReviewStep({ onSubmit, submitting, error }: ReviewStepProps) {
           />
         ) : null}
         <dl className="flex-1">
-          <SummaryRow label="Tradition" value={labelFor(TRADITIONS, store.tradition)} />
-          <SummaryRow label="Medium" value={labelFor(MEDIUMS, store.medium)} />
           <SummaryRow
-            label="Dimensions"
+            label={t('wizard.summaryTradition')}
+            value={labelFor(TRADITIONS, store.tradition)}
+          />
+          <SummaryRow label={t('wizard.summaryMedium')} value={labelFor(MEDIUMS, store.medium)} />
+          <SummaryRow
+            label={t('wizard.summaryDimensions')}
             value={`${store.dimensions.heightCm} × ${store.dimensions.widthCm} cm`}
           />
-          {store.yearCreated ? <SummaryRow label="Year" value={String(store.yearCreated)} /> : null}
-          <SummaryRow label="Condition" value={store.condition} />
+          {store.yearCreated ? (
+            <SummaryRow label={t('wizard.summaryYear')} value={String(store.yearCreated)} />
+          ) : null}
           <SummaryRow
-            label="Artist"
-            value={store.artistKnown ? store.artistName || '—' : 'Unknown'}
+            label={t('wizard.summaryCondition')}
+            value={t(CONDITION_LABEL_KEYS[store.condition] ?? store.condition)}
+          />
+          <SummaryRow
+            label={t('wizard.summaryArtist')}
+            value={store.artistKnown ? store.artistName || '—' : t('wizard.unknown')}
           />
         </dl>
       </div>
 
       {store.provenanceNotes.trim() ? (
         <div>
-          <p className="font-body text-sm font-medium text-ink">Provenance notes</p>
+          <p className="font-body text-sm font-medium text-ink">
+            {t('wizard.provenanceNotesLabel')}
+          </p>
           <p className="mt-1 font-body text-sm text-muted">{store.provenanceNotes}</p>
         </div>
       ) : null}
@@ -92,12 +111,11 @@ export function ReviewStep({ onSubmit, submitting, error }: ReviewStepProps) {
       <div className="rounded-md border border-border bg-gold/5 p-4">
         {needsPayment ? (
           <p className="font-body text-sm text-ink">
-            You’ve used all {FREE_VALUATION_LIMIT} free valuations. Your next valuation is ₹99.
+            {t('wizard.paywall', { total: FREE_VALUATION_LIMIT })}
           </p>
         ) : (
           <p className="font-body text-sm text-ink">
-            {remaining} free valuation{remaining === 1 ? '' : 's'} remaining (of{' '}
-            {FREE_VALUATION_LIMIT}).
+            {t('wizard.freeRemaining', { count: remaining, total: FREE_VALUATION_LIMIT })}
           </p>
         )}
       </div>
@@ -111,15 +129,15 @@ export function ReviewStep({ onSubmit, submitting, error }: ReviewStepProps) {
           onClick={() => store.setStep('context')}
           disabled={submitting || paying}
         >
-          Back
+          {t('common.back')}
         </Button>
         {needsPayment ? (
           <Button onClick={handlePayAndSubmit} loading={paying || submitting}>
-            Pay ₹99 &amp; value artwork
+            {t('wizard.payAndValue')}
           </Button>
         ) : (
           <Button onClick={() => onSubmit()} loading={submitting}>
-            Get my valuation
+            {t('wizard.getValuation')}
           </Button>
         )}
       </div>

@@ -1,12 +1,20 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { VALUATION_PURPOSES } from '@vaayu/shared';
 import { Button } from '../Button';
 import { ValuationReport } from './ValuationReport';
 import { useValuationStore } from '../../store/valuationStore';
 
+const PURPOSE_LABEL_KEYS: Record<string, string> = {
+  fair_market: 'wizard.purposeFairMarket',
+  insurance: 'wizard.purposeInsurance',
+  auction: 'wizard.purposeAuction',
+};
+
 /** Step 6 — the finished report plus save / share / new-valuation actions. */
 export function ResultStep() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const store = useValuationStore();
   const { result, imagePreviewUrl, reset } = store;
@@ -35,7 +43,7 @@ export function ResultStep() {
         imageFile: store.imageFile,
       });
     } catch (err) {
-      setPdfError(err instanceof Error ? err.message : 'Could not generate the PDF.');
+      setPdfError(err instanceof Error ? err.message : t('wizard.pdfError'));
     } finally {
       setPdfBusy(false);
     }
@@ -59,16 +67,20 @@ export function ResultStep() {
       <ValuationReport
         result={result}
         imageUrl={imagePreviewUrl}
-        purposeLabel={VALUATION_PURPOSES.find((p) => p.key === store.purpose)?.label}
+        purposeLabel={t(
+          PURPOSE_LABEL_KEYS[store.purpose] ??
+            VALUATION_PURPOSES.find((p) => p.key === store.purpose)?.label ??
+            '',
+        )}
       />
 
       <div className="flex flex-col gap-2 border-t border-border pt-6">
         <div className="flex flex-wrap gap-3">
           <Button onClick={handleDownloadPdf} loading={pdfBusy}>
-            Download PDF report
+            {t('wizard.downloadPdf')}
           </Button>
           <Button variant="outline" onClick={handleShare}>
-            Share
+            {t('wizard.share')}
           </Button>
           <Button
             variant="ghost"
@@ -77,7 +89,7 @@ export function ResultStep() {
               navigate('/dashboard');
             }}
           >
-            Done
+            {t('wizard.done')}
           </Button>
         </div>
         {pdfError ? <p className="font-body text-sm text-red-700">{pdfError}</p> : null}
