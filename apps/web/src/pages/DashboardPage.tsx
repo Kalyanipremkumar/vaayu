@@ -94,9 +94,17 @@ export function DashboardPage() {
             </p>
           ) : null}
         </div>
-        <Button variant="outline" onClick={handleSignOut}>
-          Sign out
-        </Button>
+        <div className="flex items-center gap-4">
+          <Link
+            to="/settings"
+            className="font-body text-sm text-muted underline-offset-4 hover:text-ink hover:underline"
+          >
+            Settings
+          </Link>
+          <Button variant="outline" onClick={handleSignOut}>
+            Sign out
+          </Button>
+        </div>
       </header>
 
       <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
