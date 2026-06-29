@@ -51,5 +51,8 @@ packages/supabase/.temp/
 # Generated edge-function bundle of @vaayu/shared (regenerate: pnpm build:edge-shared)
 supabase/functions/generate-valuation/_shared.ts
 
+# Supabase CLI scratch
+supabase/.temp/
+
 # Misc Excel lock/data file living in the parent workspace
 ~$*.xlsx
