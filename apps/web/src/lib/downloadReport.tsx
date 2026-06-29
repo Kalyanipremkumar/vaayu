@@ -16,13 +16,14 @@ function titleCase(value: string): string {
 }
 
 /**
- * Render the image onto a canvas and export JPEG. react-pdf's <Image> only
- * supports PNG/JPEG (not WebP), so this normalises any upload and downscales it
- * to keep the PDF small.
+ * Render a Blob image onto a canvas and export JPEG. react-pdf's <Image> only
+ * supports PNG/JPEG (not WebP), so this normalises any source and downscales it
+ * to keep the PDF small. Using an object URL keeps the canvas same-origin, so a
+ * remote (signed) image fetched to a Blob never taints it.
  */
-function fileToJpegDataUrl(file: File, maxPx = 1100): Promise<string> {
+function blobToJpegDataUrl(blob: Blob, maxPx = 1100): Promise<string> {
   return new Promise((resolve, reject) => {
-    const objectUrl = URL.createObjectURL(file);
+    const objectUrl = URL.createObjectURL(blob);
     const img = new window.Image();
     img.onload = () => {
       try {
@@ -50,6 +51,21 @@ function fileToJpegDataUrl(file: File, maxPx = 1100): Promise<string> {
   });
 }
 
+/** Resolve the report image to a JPEG data URL from a File or a (signed) URL. */
+async function resolveImageDataUrl(file: File | null, url: string | null): Promise<string | null> {
+  if (file) return blobToJpegDataUrl(file);
+  if (url) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      return await blobToJpegDataUrl(await res.blob());
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
 export interface DownloadReportArgs {
   result: SavedValuation;
   tradition: string;
@@ -59,12 +75,15 @@ export interface DownloadReportArgs {
   artistKnown: boolean;
   artistName: string;
   yearCreated: number | null;
-  imageFile: File | null;
+  /** Freshly uploaded file (result step) — takes precedence if present. */
+  imageFile?: File | null;
+  /** Signed image URL (re-download from history). */
+  imageUrl?: string | null;
 }
 
 /** Generate the branded report PDF and save it to the user's device. */
 export async function downloadValuationPdf(args: DownloadReportArgs): Promise<void> {
-  const imageDataUrl = args.imageFile ? await fileToJpegDataUrl(args.imageFile) : null;
+  const imageDataUrl = await resolveImageDataUrl(args.imageFile ?? null, args.imageUrl ?? null);
   const traditionLabel = labelFor(TRADITIONS, args.tradition);
   const reportId = `VAY-${args.result.id.replace(/-/g, '').slice(0, 10).toUpperCase()}`;
   const dateStr = new Date().toLocaleDateString('en-IN', {

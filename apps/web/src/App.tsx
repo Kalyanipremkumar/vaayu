@@ -8,6 +8,7 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { NewValuationPage } from './pages/NewValuationPage';
+import { ValuationReportPage } from './pages/ValuationReportPage';
 
 /**
  * Root web app component. Auth context wraps the router so route guards and
@@ -37,6 +38,14 @@ export function App() {
             element={
               <ProtectedRoute>
                 <NewValuationPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/valuations/:id"
+            element={
+              <ProtectedRoute>
+                <ValuationReportPage />
               </ProtectedRoute>
             }
           />
