@@ -10,6 +10,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { NewValuationPage } from './pages/NewValuationPage';
 import { ValuationReportPage } from './pages/ValuationReportPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { OnboardingPage } from './pages/OnboardingPage';
 
 /**
  * Root web app component. Auth context wraps the router so route guards and
@@ -55,6 +56,14 @@ export function App() {
             element={
               <ProtectedRoute>
                 <SettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/onboarding"
+            element={
+              <ProtectedRoute>
+                <OnboardingPage />
               </ProtectedRoute>
             }
           />

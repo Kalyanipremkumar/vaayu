@@ -54,6 +54,7 @@ export type Database = {
           free_valuations_used: number;
           full_name: string | null;
           id: string;
+          onboarded: boolean;
           role: Database['public']['Enums']['user_role'];
         };
         Insert: {
@@ -62,6 +63,7 @@ export type Database = {
           free_valuations_used?: number;
           full_name?: string | null;
           id: string;
+          onboarded?: boolean;
           role?: Database['public']['Enums']['user_role'];
         };
         Update: {
@@ -70,6 +72,7 @@ export type Database = {
           free_valuations_used?: number;
           full_name?: string | null;
           id?: string;
+          onboarded?: boolean;
           role?: Database['public']['Enums']['user_role'];
         };
         Relationships: [];

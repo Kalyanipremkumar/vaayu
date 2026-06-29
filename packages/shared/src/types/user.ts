@@ -13,6 +13,8 @@ export interface UserProfile {
   fullName: string | null;
   role: UserRole;
   freeValuationsUsed: number;
+  /** Whether the user has completed onboarding (role + tour). */
+  onboarded: boolean;
   createdAt: string;
 }
 

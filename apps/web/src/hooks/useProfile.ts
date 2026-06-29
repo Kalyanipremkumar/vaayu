@@ -17,7 +17,7 @@ export function useProfile() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('id, email, full_name, role, free_valuations_used, created_at')
+        .select('id, email, full_name, role, free_valuations_used, onboarded, created_at')
         .eq('id', user!.id)
         .maybeSingle();
 
@@ -34,6 +34,7 @@ export function useProfile() {
         fullName: data.full_name,
         role: data.role,
         freeValuationsUsed: data.free_valuations_used,
+        onboarded: data.onboarded,
         createdAt: data.created_at,
       };
     },
