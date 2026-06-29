@@ -11,6 +11,7 @@ import type {
 } from '@vaayu/shared';
 import { supabase } from './supabase';
 import { compressImage } from './upload';
+import type { RazorpayPayment } from './payments';
 
 const BUCKET = 'valuation-uploads';
 
@@ -41,8 +42,8 @@ export interface SubmitValuationParams {
   condition: ArtworkCondition;
   provenanceNotes: string;
   purpose: ValuationPurpose;
-  /** Razorpay/Stripe payment id when this valuation was paid for. */
-  paymentId?: string | null;
+  /** Razorpay payment, present when this valuation was paid for. */
+  payment?: RazorpayPayment | null;
 }
 
 export interface SavedValuation extends ValuationResult {
@@ -75,7 +76,9 @@ export async function submitValuation(params: SubmitValuationParams): Promise<Sa
       condition: params.condition,
       provenanceNotes: params.provenanceNotes,
       purpose: params.purpose,
-      paymentId: params.paymentId ?? null,
+      razorpayOrderId: params.payment?.razorpayOrderId ?? null,
+      razorpayPaymentId: params.payment?.razorpayPaymentId ?? null,
+      razorpaySignature: params.payment?.razorpaySignature ?? null,
     },
   });
 

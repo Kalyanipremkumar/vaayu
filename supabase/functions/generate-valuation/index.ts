@@ -55,6 +55,31 @@ function extractJson(text: string): unknown {
   return JSON.parse(candidate.slice(start, end + 1));
 }
 
+/** Verify a Razorpay payment signature = HMAC-SHA256(order|payment, keySecret). */
+async function verifyRazorpay(
+  orderId: string,
+  paymentId: string,
+  signature: string,
+  secret: string,
+): Promise<boolean> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const mac = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    new TextEncoder().encode(`${orderId}|${paymentId}`),
+  );
+  const hex = Array.from(new Uint8Array(mac))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  return hex === signature;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
@@ -91,7 +116,11 @@ Deno.serve(async (req: Request) => {
     typeof payload.artworkImageUrl === 'string' ? payload.artworkImageUrl : '';
   const tradition = typeof payload.tradition === 'string' ? payload.tradition : '';
   const medium = typeof payload.medium === 'string' ? payload.medium : '';
-  const paymentId = typeof payload.paymentId === 'string' ? payload.paymentId : null;
+  const rzpOrderId = typeof payload.razorpayOrderId === 'string' ? payload.razorpayOrderId : null;
+  const rzpPaymentId =
+    typeof payload.razorpayPaymentId === 'string' ? payload.razorpayPaymentId : null;
+  const rzpSignature =
+    typeof payload.razorpaySignature === 'string' ? payload.razorpaySignature : null;
   const purpose =
     payload.purpose === 'insurance' || payload.purpose === 'auction'
       ? payload.purpose
@@ -140,12 +169,29 @@ Deno.serve(async (req: Request) => {
   if (profileError) return json({ error: 'Could not load your profile.' }, 500);
 
   const freeUsed = profile?.free_valuations_used ?? 0;
-  const isPaid = Boolean(paymentId);
-  if (freeUsed >= FREE_VALUATION_LIMIT && !isPaid) {
-    return json(
-      { error: 'Free valuations exhausted. Payment required.', code: 'payment_required' },
-      402,
-    );
+  let isPaid = false;
+  let verifiedPaymentId: string | null = null;
+  if (freeUsed >= FREE_VALUATION_LIMIT) {
+    // Free quota exhausted — require a verified Razorpay payment.
+    const rzpSecret = Deno.env.get('RAZORPAY_KEY_SECRET');
+    if (!rzpSecret) {
+      return json(
+        { error: 'Payments are not configured yet.', code: 'payments_unconfigured' },
+        503,
+      );
+    }
+    if (!rzpOrderId || !rzpPaymentId || !rzpSignature) {
+      return json(
+        { error: 'Free valuations exhausted. Payment required.', code: 'payment_required' },
+        402,
+      );
+    }
+    const ok = await verifyRazorpay(rzpOrderId, rzpPaymentId, rzpSignature, rzpSecret);
+    if (!ok) {
+      return json({ error: 'Payment could not be verified.', code: 'payment_invalid' }, 402);
+    }
+    isPaid = true;
+    verifiedPaymentId = rzpPaymentId;
   }
 
   const contextLines = [
@@ -228,7 +274,7 @@ Deno.serve(async (req: Request) => {
       ai_reasoning: result.reasoning,
       full_report: result.fullReport,
       was_paid: isPaid,
-      payment_id: paymentId,
+      payment_id: verifiedPaymentId,
     })
     .select('id')
     .single();

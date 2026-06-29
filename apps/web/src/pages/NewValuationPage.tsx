@@ -10,6 +10,7 @@ import { ResultStep } from '../components/valuation/ResultStep';
 import { useValuationStore } from '../store/valuationStore';
 import { useAuth } from '../hooks/useAuth';
 import { submitValuation } from '../lib/valuation';
+import type { RazorpayPayment } from '../lib/payments';
 
 /**
  * The valuation wizard. Renders the active step from the Zustand store and owns
@@ -27,7 +28,7 @@ export function NewValuationPage() {
   }, []);
 
   const mutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (payment?: RazorpayPayment) => {
       if (!user) throw new Error('You must be signed in.');
       if (!store.imageFile) throw new Error('Please choose an image first.');
       return submitValuation({
@@ -42,6 +43,7 @@ export function NewValuationPage() {
         condition: store.condition,
         provenanceNotes: store.provenanceNotes,
         purpose: store.purpose,
+        payment,
       });
     },
     onMutate: () => store.setStep('processing'),
@@ -86,7 +88,7 @@ export function NewValuationPage() {
         {store.step === 'context' && <ContextStep />}
         {store.step === 'review' && (
           <ReviewStep
-            onSubmit={() => mutation.mutate()}
+            onSubmit={(payment) => mutation.mutate(payment)}
             submitting={mutation.isPending}
             error={submitError}
           />

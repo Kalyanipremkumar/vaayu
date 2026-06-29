@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { FREE_VALUATION_LIMIT, TRADITIONS, MEDIUMS } from '@vaayu/shared';
 import { Button } from '../Button';
 import { useValuationStore } from '../../store/valuationStore';
 import { useProfile } from '../../hooks/useProfile';
+import { useAuth } from '../../hooks/useAuth';
+import { payForValuation, type RazorpayPayment } from '../../lib/payments';
 
 function labelFor(list: readonly { key: string; label: string }[], key: string): string {
   return list.find((item) => item.key === key)?.label ?? key;
@@ -18,24 +21,40 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 }
 
 interface ReviewStepProps {
-  /** Kick off the valuation (upload + server call). */
-  onSubmit: () => void;
+  /** Kick off the valuation (upload + server call), with payment when required. */
+  onSubmit: (payment?: RazorpayPayment) => void;
   submitting: boolean;
   error: string | null;
 }
 
 /**
- * Step 3 — review the submission and show how many free valuations remain, then
- * submit for valuation. The paywall (when no free valuations remain) is wired in
- * Phase 3; for now a user with credits remaining proceeds straight to the AI.
+ * Step 3 — review the submission, show free-valuations remaining, and submit.
+ * When the free quota is exhausted, the user pays ₹99 via Razorpay; the verified
+ * payment is passed to the server, which re-checks the signature before valuing.
  */
 export function ReviewStep({ onSubmit, submitting, error }: ReviewStepProps) {
   const store = useValuationStore();
   const { data: profile } = useProfile();
+  const { user } = useAuth();
+  const [paying, setPaying] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
 
   const used = profile?.freeValuationsUsed ?? 0;
   const remaining = Math.max(0, FREE_VALUATION_LIMIT - used);
   const needsPayment = remaining === 0;
+
+  async function handlePayAndSubmit() {
+    setPayError(null);
+    setPaying(true);
+    try {
+      const payment = await payForValuation(user?.email);
+      onSubmit(payment);
+    } catch (err) {
+      setPayError(err instanceof Error ? err.message : 'Payment did not complete.');
+    } finally {
+      setPaying(false);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -84,26 +103,25 @@ export function ReviewStep({ onSubmit, submitting, error }: ReviewStepProps) {
       </div>
 
       {error ? <p className="font-body text-sm text-red-700">{error}</p> : null}
+      {payError ? <p className="font-body text-sm text-red-700">{payError}</p> : null}
 
       <div className="flex items-center justify-between">
-        <Button variant="ghost" onClick={() => store.setStep('context')} disabled={submitting}>
+        <Button
+          variant="ghost"
+          onClick={() => store.setStep('context')}
+          disabled={submitting || paying}
+        >
           Back
         </Button>
-        <div className="flex flex-col items-end gap-1">
-          <Button
-            onClick={onSubmit}
-            loading={submitting}
-            disabled={needsPayment}
-            title={needsPayment ? 'Payment checkout arrives in Phase 3.' : undefined}
-          >
-            {needsPayment ? 'Pay ₹99 & value artwork' : 'Get my valuation'}
+        {needsPayment ? (
+          <Button onClick={handlePayAndSubmit} loading={paying || submitting}>
+            Pay ₹99 &amp; value artwork
           </Button>
-          {needsPayment ? (
-            <span className="font-body text-xs text-muted">
-              Payment checkout arrives in Phase 3.
-            </span>
-          ) : null}
-        </div>
+        ) : (
+          <Button onClick={() => onSubmit()} loading={submitting}>
+            Get my valuation
+          </Button>
+        )}
       </div>
     </div>
   );
