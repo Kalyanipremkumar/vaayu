@@ -17,8 +17,10 @@
     "@vaayu/shared": "workspace:*",
     "@vaayu/supabase": "workspace:*",
     "browser-image-compression": "^2.0.2",
+    "i18next": "^26.3.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-i18next": "^17.0.8",
     "react-router-dom": "^6.28.0",
     "zustand": "^5.0.2"
   },

@@ -1,68 +1,54 @@
 import { Link } from 'react-router-dom';
+import { Trans, useTranslation } from 'react-i18next';
 import { VALUATION_DISCLAIMER } from '@vaayu/shared';
 import { Button } from '../components/Button';
-
-const LAYERS = [
-  {
-    n: '01',
-    title: 'Base value',
-    body: 'Every tradition and medium has a market rate — often expressed per square foot. Vaayu starts from that benchmark (e.g. Mithila, Warli, oil, print), the same square-foot logic galleries use.',
-  },
-  {
-    n: '02',
-    title: 'Artist multiplier',
-    body: 'The artist’s standing moves the price up or down. Vaayu weighs the gallerist’s checklist (below) and places the work on a tier — emerging, mid-career, established, or renowned.',
-  },
-  {
-    n: '03',
-    title: 'Work-level adjustment',
-    body: 'Finally, the specific piece: condition, size, materials, theme rarity, and provenance. A standout example earns a premium; problems earn a discount — what curators have always done by intuition.',
-  },
-];
-
-const CHECKLIST = [
-  'What is the artist’s education and training?',
-  'Where have they exhibited, and with whom?',
-  'Do they show range across styles, subjects, and mediums?',
-  'Who are their collectors? Any institutions or respected names?',
-  'Is the artist’s work featured in credible publications?',
-  'Does the per-square-foot rate align with all of the above?',
-  'Are you buying from a reputed gallery or curator?',
-  'Having seen enough other work, does the price feel right to your conviction?',
-  'Is the price grounded in quality — or inflated by hype?',
-];
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 
 /** Public page explaining Vaayu's valuation methodology and the gallerist's checklist. */
 export function HowItWorksPage() {
+  const { t } = useTranslation();
+  const layers = [1, 2, 3].map((n) => ({
+    n: String(n).padStart(2, '0'),
+    title: t(`howItWorks.layer${n}Title`),
+    body: t(`howItWorks.layer${n}Body`),
+  }));
+  const questions = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => t(`howItWorks.q${n}`));
+
   return (
     <div className="min-h-screen bg-cream">
       <header className="mx-auto flex max-w-3xl items-center justify-between px-6 py-5">
         <Link to="/" className="font-body text-sm font-medium uppercase tracking-[0.3em] text-ink">
           Vaayu
         </Link>
-        <Link
-          to="/signup"
-          className="font-body text-sm text-muted underline-offset-4 hover:text-ink hover:underline"
-        >
-          Get started
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link
+            to="/signup"
+            className="font-body text-sm text-muted underline-offset-4 hover:text-ink hover:underline"
+          >
+            {t('common.getStarted')}
+          </Link>
+          <LanguageSwitcher />
+        </div>
       </header>
 
       <main className="mx-auto max-w-3xl px-6 pb-20">
-        <p className="font-body text-xs uppercase tracking-[0.25em] text-gold">How it works</p>
+        <p className="font-body text-xs uppercase tracking-[0.25em] text-gold">
+          {t('howItWorks.kicker')}
+        </p>
         <h1 className="mt-3 font-heading text-4xl text-ink md:text-5xl">
-          Professional-grade valuation, <em className="italic text-gold">made transparent</em>.
+          <Trans
+            i18nKey="howItWorks.title"
+            components={{ 1: <em className="italic text-gold" /> }}
+          />
         </h1>
         <p className="mt-4 max-w-xl font-body text-base leading-relaxed text-muted">
-          Valuing art has always needed experienced gallerists — the parameters are complex and
-          qualitative. Vaayu applies that same discipline with AI: consistently, transparently, and
-          at scale. Here is exactly how the number is built.
+          {t('howItWorks.intro')}
         </p>
 
         <section className="mt-14">
-          <h2 className="font-heading text-2xl text-ink">The three layers</h2>
+          <h2 className="font-heading text-2xl text-ink">{t('howItWorks.layersTitle')}</h2>
           <div className="mt-6 grid gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-3">
-            {LAYERS.map((l) => (
+            {layers.map((l) => (
               <div key={l.n} className="bg-cream p-6">
                 <span className="font-heading text-4xl text-gold">{l.n}</span>
                 <h3 className="mt-3 font-heading text-xl text-ink">{l.title}</h3>
@@ -70,21 +56,14 @@ export function HowItWorksPage() {
               </div>
             ))}
           </div>
-          <p className="mt-4 font-body text-sm text-muted">
-            <span className="text-ink">Estimate</span> = base value × artist multiplier × work
-            adjustment, shown as a low–mid–high range with a confidence score.
-          </p>
+          <p className="mt-4 font-body text-sm text-muted">{t('howItWorks.formula')}</p>
         </section>
 
         <section className="mt-14">
-          <h2 className="font-heading text-2xl text-ink">The questions a gallerist asks</h2>
-          <p className="mt-2 font-body text-sm text-muted">
-            Before paying for a work, run through these. Vaayu weighs the same parameters in Layer 2
-            — and the more of this you can add (in the artist name and provenance notes), the
-            sharper and more confident the estimate.
-          </p>
+          <h2 className="font-heading text-2xl text-ink">{t('howItWorks.checklistTitle')}</h2>
+          <p className="mt-2 font-body text-sm text-muted">{t('howItWorks.checklistLead')}</p>
           <ol className="mt-6 space-y-3">
-            {CHECKLIST.map((q, i) => (
+            {questions.map((q, i) => (
               <li key={i} className="flex gap-4">
                 <span className="font-heading text-lg text-gold">
                   {String(i + 1).padStart(2, '0')}
@@ -94,21 +73,19 @@ export function HowItWorksPage() {
             ))}
           </ol>
           <p className="mt-6 rounded-xl border border-border bg-gold/[0.05] p-4 font-body text-sm text-ink">
-            <span className="font-medium">The hype check:</span> a high price should be grounded in
-            quality and verifiable standing — not hype. When the inputs don’t justify a high figure,
-            Vaayu keeps the estimate conservative <em>and</em> lowers the confidence score, rather
-            than inflating both.
+            <span className="font-medium">{t('howItWorks.hypeLabel')}</span>{' '}
+            {t('howItWorks.hypeBody')}
           </p>
         </section>
 
         <section className="mt-14 rounded-2xl bg-ink px-8 py-12 text-center">
-          <h2 className="font-heading text-3xl text-cream">See it on your own work</h2>
+          <h2 className="font-heading text-3xl text-cream">{t('howItWorks.ctaTitle')}</h2>
           <p className="mx-auto mt-3 max-w-md font-body text-sm text-cream/70">
-            Your first three valuations are free.
+            {t('howItWorks.ctaLead')}
           </p>
           <div className="mt-6">
             <Link to="/signup">
-              <Button variant="gold">Get started</Button>
+              <Button variant="gold">{t('common.getStarted')}</Button>
             </Link>
           </div>
         </section>
