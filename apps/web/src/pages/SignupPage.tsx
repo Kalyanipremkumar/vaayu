@@ -4,11 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { AuthLayout } from '../components/AuthLayout';
 import { Button } from '../components/Button';
 import { TextField } from '../components/TextField';
-import { signInWithGoogle, signUpWithEmail } from '../lib/auth';
+import { signUpWithEmail } from '../lib/auth';
 
 const MIN_PASSWORD_LENGTH = 8;
 
-/** Create an account with email/password (or Google). */
+/** Create an account with email/password. (Google is disabled until configured.) */
 export function SignupPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -39,15 +39,6 @@ export function SignupPage() {
       setError(err instanceof Error ? err.message : t('auth.signupFailed'));
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleGoogle() {
-    setError(null);
-    try {
-      await signInWithGoogle();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('auth.googleFailed'));
     }
   }
 
@@ -101,18 +92,6 @@ export function SignupPage() {
           {t('auth.createAccountBtn')}
         </Button>
       </form>
-
-      <div className="my-5 flex items-center gap-3">
-        <span className="h-px flex-1 bg-border" />
-        <span className="font-body text-xs uppercase tracking-widest text-muted">
-          {t('auth.or')}
-        </span>
-        <span className="h-px flex-1 bg-border" />
-      </div>
-
-      <Button type="button" variant="outline" className="w-full" onClick={handleGoogle}>
-        {t('auth.continueGoogle')}
-      </Button>
     </AuthLayout>
   );
 }

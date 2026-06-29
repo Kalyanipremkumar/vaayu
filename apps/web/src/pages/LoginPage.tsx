@@ -4,9 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { AuthLayout } from '../components/AuthLayout';
 import { Button } from '../components/Button';
 import { TextField } from '../components/TextField';
-import { signInWithEmail, signInWithGoogle } from '../lib/auth';
+import { signInWithEmail } from '../lib/auth';
 
-/** Email/password + Google sign-in. */
+/** Email/password sign-in. (Google is disabled until the provider is configured.) */
 export function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -26,15 +26,6 @@ export function LoginPage() {
       setError(err instanceof Error ? err.message : t('auth.signInFailed'));
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleGoogle() {
-    setError(null);
-    try {
-      await signInWithGoogle();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('auth.googleFailed'));
     }
   }
 
@@ -83,18 +74,6 @@ export function LoginPage() {
           {t('common.signIn')}
         </Button>
       </form>
-
-      <div className="my-5 flex items-center gap-3">
-        <span className="h-px flex-1 bg-border" />
-        <span className="font-body text-xs uppercase tracking-widest text-muted">
-          {t('auth.or')}
-        </span>
-        <span className="h-px flex-1 bg-border" />
-      </div>
-
-      <Button type="button" variant="outline" className="w-full" onClick={handleGoogle}>
-        {t('auth.continueGoogle')}
-      </Button>
     </AuthLayout>
   );
 }
