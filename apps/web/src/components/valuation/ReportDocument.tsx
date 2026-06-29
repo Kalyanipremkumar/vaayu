@@ -3,7 +3,7 @@ import { formatInr, type ValuationResult } from '@vaayu/shared';
 
 /** Brand palette mirrored from the design tokens. */
 const C = {
-  ink: '#1A0A05',
+  ink: '#0E3A38',
   cream: '#FFFDF8',
   gold: '#C8A84B',
   muted: '#5C5C5C',

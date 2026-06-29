@@ -10,8 +10,8 @@
  */
 
 export const COLORS = {
-  /** Primary — deep ink black. */
-  ink: '#1A0A05',
+  /** Primary brand dark — deep petrol teal (heritage/auction-house feel). */
+  ink: '#0E3A38',
   /** Background — off-white cream. */
   cream: '#FFFDF8',
   /** Accent — warm gold. */

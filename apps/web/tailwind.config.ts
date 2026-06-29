@@ -15,7 +15,9 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: '#1A0A05',
+        // Brand dark surface + text. Deep petrol teal — heritage/auction-house
+        // feel, pairs with gold + cream. (Was near-black #1A0A05.)
+        ink: '#0E3A38',
         cream: '#FFFDF8',
         gold: '#C8A84B',
         muted: '#5C5C5C',
