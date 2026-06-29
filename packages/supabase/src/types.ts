@@ -188,6 +188,60 @@ export type Database = {
         };
         Relationships: [];
       };
+      artist_pricings: {
+        Row: {
+          artwork_image_url: string | null;
+          ask_inr: number;
+          career_stage: string | null;
+          ceiling_inr: number;
+          created_at: string;
+          dimensions_height_cm: number | null;
+          dimensions_width_cm: number | null;
+          floor_inr: number;
+          id: string;
+          medium: string | null;
+          per_sqft_inr: number | null;
+          posture: string | null;
+          result: Json;
+          tradition: string | null;
+          user_id: string;
+        };
+        Insert: {
+          artwork_image_url?: string | null;
+          ask_inr: number;
+          career_stage?: string | null;
+          ceiling_inr: number;
+          created_at?: string;
+          dimensions_height_cm?: number | null;
+          dimensions_width_cm?: number | null;
+          floor_inr: number;
+          id?: string;
+          medium?: string | null;
+          per_sqft_inr?: number | null;
+          posture?: string | null;
+          result: Json;
+          tradition?: string | null;
+          user_id: string;
+        };
+        Update: {
+          artwork_image_url?: string | null;
+          ask_inr?: number;
+          career_stage?: string | null;
+          ceiling_inr?: number;
+          created_at?: string;
+          dimensions_height_cm?: number | null;
+          dimensions_width_cm?: number | null;
+          floor_inr?: number;
+          id?: string;
+          medium?: string | null;
+          per_sqft_inr?: number | null;
+          posture?: string | null;
+          result?: Json;
+          tradition?: string | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

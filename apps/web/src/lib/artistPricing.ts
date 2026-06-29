@@ -18,6 +18,7 @@ import {
 } from '@vaayu/shared';
 import { supabase } from './supabase';
 import { compressImage } from './upload';
+import { saveArtistPricing } from './artistPricings';
 
 function blobToBase64DataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -30,6 +31,8 @@ function blobToBase64DataUrl(blob: Blob): Promise<string> {
 
 export interface SubmitArtistPricingParams {
   imageFile: File;
+  /** The signed-in user, used to persist the pricing to their history. */
+  userId: string;
   // Artist profile (Layer 2)
   careerStage: CareerStage;
   yearsSelling: number;
@@ -104,5 +107,23 @@ export async function submitArtistPricing(
     galleryCutPct: params.galleryCutPct,
   });
 
-  return { ...breakdown, posture: params.posture, valuation: data };
+  const result: ArtistPricingResult = { ...breakdown, posture: params.posture, valuation: data };
+
+  // Persist to the user's history (best-effort — never fail the result on this).
+  try {
+    await saveArtistPricing({
+      userId: params.userId,
+      image: compressed,
+      tradition: params.tradition,
+      medium: params.medium,
+      dimensions: params.dimensions,
+      careerStage: params.careerStage,
+      posture: params.posture,
+      result,
+    });
+  } catch (err) {
+    console.error('Could not save artist pricing to history:', err);
+  }
+
+  return result;
 }

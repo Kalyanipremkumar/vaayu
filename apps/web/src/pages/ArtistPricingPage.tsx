@@ -1,7 +1,7 @@
 import { useRef, useState, type DragEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   CAREER_STAGES,
   GALLERY_CUT_RANGE,
@@ -23,6 +23,7 @@ import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { ArtistResult } from '../components/artist/ArtistResult';
 import { validateImageFile } from '../lib/upload';
 import { submitArtistPricing } from '../lib/artistPricing';
+import { useAuth } from '../hooks/useAuth';
 
 const traditionOptions: SelectOption[] = TRADITIONS.map((t) => ({ value: t.key, label: t.label }));
 const mediumOptions: SelectOption[] = MEDIUMS.map((m) => ({ value: m.key, label: m.label }));
@@ -45,6 +46,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export function ArtistPricingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Image
@@ -126,8 +129,10 @@ export function ArtistPricingPage() {
   const mutation = useMutation({
     mutationFn: () => {
       if (!imageFile) throw new Error(t('artist.errImage'));
+      if (!user) throw new Error(t('artist.errImage'));
       return submitArtistPricing({
         imageFile,
+        userId: user.id,
         careerStage,
         yearsSelling,
         exhibitions3yr,
@@ -149,6 +154,9 @@ export function ArtistPricingPage() {
         pastSalePrices,
         recognition,
       });
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['artistPricings'] });
     },
   });
 

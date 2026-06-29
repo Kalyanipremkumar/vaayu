@@ -8,20 +8,29 @@ import type { AppMode } from '@vaayu/shared';
 
 const STORAGE_KEY = 'vaayu_mode';
 
-function initialMode(): AppMode {
-  if (typeof localStorage === 'undefined') return 'collector';
-  return localStorage.getItem(STORAGE_KEY) === 'artist' ? 'artist' : 'collector';
+function stored(): { mode: AppMode; explicit: boolean } {
+  if (typeof localStorage === 'undefined') return { mode: 'collector', explicit: false };
+  const v = localStorage.getItem(STORAGE_KEY);
+  return {
+    mode: v === 'artist' ? 'artist' : 'collector',
+    explicit: v === 'artist' || v === 'collector',
+  };
 }
 
 interface AppModeState {
   mode: AppMode;
+  /** True once the user (or a stored preference) has explicitly chosen a mode. */
+  explicit: boolean;
   setMode: (mode: AppMode) => void;
+  /** Set the mode as a default only — does not mark it as an explicit choice. */
+  setDefaultMode: (mode: AppMode) => void;
 }
 
 export const useAppMode = create<AppModeState>((set) => ({
-  mode: initialMode(),
+  ...stored(),
   setMode: (mode) => {
     if (typeof localStorage !== 'undefined') localStorage.setItem(STORAGE_KEY, mode);
-    set({ mode });
+    set({ mode, explicit: true });
   },
+  setDefaultMode: (mode) => set((s) => (s.explicit ? s : { ...s, mode })),
 }));
