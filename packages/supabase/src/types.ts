@@ -96,6 +96,7 @@ export type Database = {
           medium: string | null;
           payment_id: string | null;
           provenance_notes: string | null;
+          purpose: string;
           tradition: string | null;
           user_id: string;
           was_paid: boolean;
@@ -119,6 +120,7 @@ export type Database = {
           medium?: string | null;
           payment_id?: string | null;
           provenance_notes?: string | null;
+          purpose?: string;
           tradition?: string | null;
           user_id: string;
           was_paid?: boolean;
@@ -142,6 +144,7 @@ export type Database = {
           medium?: string | null;
           payment_id?: string | null;
           provenance_notes?: string | null;
+          purpose?: string;
           tradition?: string | null;
           user_id?: string;
           was_paid?: boolean;

@@ -4,7 +4,7 @@
  * into @vaayu/shared later without renaming.
  */
 import { create } from 'zustand';
-import type { ArtworkCondition, Dimensions } from '@vaayu/shared';
+import type { ArtworkCondition, Dimensions, ValuationPurpose } from '@vaayu/shared';
 import type { SavedValuation } from '../lib/valuation';
 
 /** Steps in the valuation wizard. */
@@ -22,6 +22,7 @@ interface ValuationDraft {
   yearCreated: number | null;
   condition: ArtworkCondition;
   provenanceNotes: string;
+  purpose: ValuationPurpose;
 }
 
 interface ValuationState extends ValuationDraft {
@@ -46,6 +47,7 @@ const initialDraft: ValuationDraft = {
   yearCreated: null,
   condition: 'good',
   provenanceNotes: '',
+  purpose: 'fair_market',
 };
 
 export const useValuationStore = create<ValuationState>((set) => ({

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { VALUATION_PURPOSES } from '@vaayu/shared';
 import { Button } from '../Button';
 import { ValuationReport } from './ValuationReport';
 import { useValuationStore } from '../../store/valuationStore';
@@ -30,6 +31,7 @@ export function ResultStep() {
         artistKnown: store.artistKnown,
         artistName: store.artistName,
         yearCreated: store.yearCreated,
+        purpose: store.purpose,
         imageFile: store.imageFile,
       });
     } catch (err) {
@@ -54,7 +56,11 @@ export function ResultStep() {
 
   return (
     <div className="flex flex-col gap-8">
-      <ValuationReport result={result} imageUrl={imagePreviewUrl} />
+      <ValuationReport
+        result={result}
+        imageUrl={imagePreviewUrl}
+        purposeLabel={VALUATION_PURPOSES.find((p) => p.key === store.purpose)?.label}
+      />
 
       <div className="flex flex-col gap-2 border-t border-border pt-6">
         <div className="flex flex-wrap gap-3">

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { VALUATION_PURPOSES } from '@vaayu/shared';
 import { Button } from '../components/Button';
 import { ValuationReport } from '../components/valuation/ValuationReport';
 import { useValuation } from '../hooks/useValuations';
@@ -31,6 +32,7 @@ export function ValuationReportPage() {
         artistKnown: record.artistKnown,
         artistName: record.artistName ?? '',
         yearCreated: record.yearCreated,
+        purpose: record.purpose,
         imageUrl: record.imageUrl,
       });
     } catch (err) {
@@ -55,7 +57,11 @@ export function ValuationReportPage() {
           </p>
         ) : (
           <div className="flex flex-col gap-8">
-            <ValuationReport result={record.result} imageUrl={record.imageUrl} />
+            <ValuationReport
+              result={record.result}
+              imageUrl={record.imageUrl}
+              purposeLabel={VALUATION_PURPOSES.find((p) => p.key === record.purpose)?.label}
+            />
             <div className="flex flex-col gap-2 border-t border-border pt-6">
               <div className="flex flex-wrap gap-3">
                 <Button onClick={handleDownloadPdf} loading={pdfBusy}>

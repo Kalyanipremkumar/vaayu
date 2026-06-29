@@ -4,7 +4,13 @@
  * that *fills in* these values runs server-side; these bound and combine them.
  */
 
-import type { ArtistTier, ArtworkCondition, PaymentProvider, ValuationPrice } from '../types';
+import type {
+  ArtistTier,
+  ArtworkCondition,
+  PaymentProvider,
+  ValuationPrice,
+  ValuationPurpose,
+} from '../types';
 
 /** Layer-2 artist multiplier band per recognition tier. */
 export const ARTIST_TIER_MULTIPLIERS: Record<ArtistTier, { min: number; max: number }> = {
@@ -30,6 +36,35 @@ export const CONDITION_FACTORS: Record<ArtworkCondition, number> = {
 
 /** Spread applied around the mid estimate to produce low / high. */
 export const ESTIMATE_SPREAD = { lowFactor: 0.85, highFactor: 1.2 } as const;
+
+/**
+ * Valuation purposes. `instruction` is appended to the model prompt server-side
+ * so the estimate reflects the right kind of value; `label` is the UI option.
+ */
+export const VALUATION_PURPOSES: readonly {
+  key: ValuationPurpose;
+  label: string;
+  instruction: string;
+}[] = [
+  {
+    key: 'fair_market',
+    label: 'Fair market value',
+    instruction:
+      'VALUATION PURPOSE — Fair Market Value: the price a willing buyer and willing seller would agree on, neither under compulsion. This is the default, balanced retail-resale value.',
+  },
+  {
+    key: 'insurance',
+    label: 'Insurance / replacement',
+    instruction:
+      'VALUATION PURPOSE — Insurance / Replacement Value: the retail cost to replace this work with a comparable one. This is typically HIGHER than fair market value (full retail, not resale). Lean to the upper end of defensible.',
+  },
+  {
+    key: 'auction',
+    label: 'Auction estimate',
+    instruction:
+      'VALUATION PURPOSE — Auction Estimate: the realistic hammer-price range expected at auction, before buyer’s premium. This typically sits at or below fair-market retail; present a sensible low–high auction range.',
+  },
+] as const;
 
 /** Pay-per-valuation pricing by region. */
 export const VALUATION_PRICES: Record<PaymentProvider, ValuationPrice> = {

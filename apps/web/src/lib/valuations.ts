@@ -19,6 +19,7 @@ export interface ValuationRecord {
   tradition: string;
   medium: string;
   condition: ArtworkCondition | null;
+  purpose: string;
   artistKnown: boolean;
   artistName: string | null;
   yearCreated: number | null;
@@ -53,6 +54,7 @@ function rowToRecord(row: Row, imageUrl: string | null): ValuationRecord {
     tradition: row.tradition ?? '',
     medium: row.medium ?? '',
     condition: row.condition,
+    purpose: row.purpose ?? 'fair_market',
     artistKnown: row.artist_known,
     artistName: row.artist_name,
     yearCreated: row.year_created,

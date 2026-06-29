@@ -41,6 +41,7 @@ export function NewValuationPage() {
         yearCreated: store.yearCreated,
         condition: store.condition,
         provenanceNotes: store.provenanceNotes,
+        purpose: store.purpose,
       });
     },
     onMutate: () => store.setStep('processing'),

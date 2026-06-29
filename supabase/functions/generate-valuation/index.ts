@@ -1,12 +1,5 @@
-// Vaayu — generate-valuation Edge Function (Deno).
-//
-// Runs the AI valuation SERVER-SIDE so the Anthropic key never reaches a client.
-// Flow: verify the caller's JWT → gate on free-quota/payment → rate-limit →
-// sanitise input → call Claude (vision) with the three-layer prompt → apply the
-// pure methodology guardrails → persist with the service-role key → return.
-//
-// The pricing methodology (prompt + pure math) is the SINGLE SOURCE in
-// packages/shared; `_shared.ts` is its esbuild bundle (pnpm build:edge-shared).
+// Vaayu - generate-valuation Edge Function (Deno).
+// Server-side AI valuation so the Anthropic key never reaches a client.
 
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import Anthropic from '@anthropic-ai/sdk';
@@ -19,11 +12,20 @@ import {
   sanitizeFreeText,
 } from './_shared.ts';
 
-// User's spec named "Claude Sonnet 4" → current Sonnet 4 family id. Override via
-// the VAAYU_CLAUDE_MODEL secret (e.g. claude-opus-4-8 for higher-quality runs).
 const MODEL = Deno.env.get('VAAYU_CLAUDE_MODEL') ?? 'claude-sonnet-4-6';
 const RATE_LIMIT_PER_MINUTE = 10;
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+// Purpose-specific guidance appended to the prompt. Mirrors VALUATION_PURPOSES
+// in @vaayu/shared (kept inline here to avoid re-bundling for one feature).
+const PURPOSE_INSTRUCTIONS: Record<string, string> = {
+  fair_market:
+    'VALUATION PURPOSE - Fair Market Value: the price a willing buyer and willing seller would agree on, neither under compulsion. This is the default, balanced retail-resale value.',
+  insurance:
+    'VALUATION PURPOSE - Insurance / Replacement Value: the retail cost to replace this work with a comparable one. This is typically HIGHER than fair market value (full retail, not resale). Lean to the upper end of defensible.',
+  auction:
+    'VALUATION PURPOSE - Auction Estimate: the realistic hammer-price range expected at auction, before buyer premium. This typically sits at or below fair-market retail; present a sensible low-high auction range.',
+};
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -38,14 +40,12 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-/** Split an optional data-URI prefix off a base64 image and detect its mime. */
 function parseImage(imageBase64: string): { mediaType: string; data: string } {
   const match = /^data:(image\/[a-zA-Z+]+);base64,(.*)$/s.exec(imageBase64);
   if (match) return { mediaType: match[1], data: match[2] };
   return { mediaType: 'image/jpeg', data: imageBase64 };
 }
 
-/** Tolerantly extract a JSON object from the model's text (strips code fences). */
 function extractJson(text: string): unknown {
   const fenced = /```(?:json)?\s*([\s\S]*?)```/.exec(text);
   const candidate = fenced ? fenced[1] : text;
@@ -67,7 +67,6 @@ Deno.serve(async (req: Request) => {
     return json({ error: 'Server is not configured. Missing required secrets.' }, 500);
   }
 
-  // --- Authenticate the caller -------------------------------------------------
   const authHeader = req.headers.get('Authorization') ?? '';
   const userClient = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authHeader } },
@@ -78,12 +77,8 @@ Deno.serve(async (req: Request) => {
   } = await userClient.auth.getUser();
   if (userError || !user) return json({ error: 'Unauthorized' }, 401);
 
-  // Service-role client for privileged reads/writes (bypasses RLS).
-  const admin = createClient(supabaseUrl, serviceKey, {
-    auth: { persistSession: false },
-  });
+  const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
 
-  // --- Parse + validate the request --------------------------------------------
   let payload: Record<string, unknown>;
   try {
     payload = await req.json();
@@ -97,6 +92,10 @@ Deno.serve(async (req: Request) => {
   const tradition = typeof payload.tradition === 'string' ? payload.tradition : '';
   const medium = typeof payload.medium === 'string' ? payload.medium : '';
   const paymentId = typeof payload.paymentId === 'string' ? payload.paymentId : null;
+  const purpose =
+    payload.purpose === 'insurance' || payload.purpose === 'auction'
+      ? payload.purpose
+      : 'fair_market';
 
   if (!imageBase64) return json({ error: 'imageBase64 is required' }, 400);
   if (!artworkImageUrl) return json({ error: 'artworkImageUrl is required' }, 400);
@@ -123,7 +122,6 @@ Deno.serve(async (req: Request) => {
         : undefined,
   };
 
-  // --- Rate limit (per user, last 60s) -----------------------------------------
   const sinceIso = new Date(Date.now() - 60_000).toISOString();
   const { count: recentCount } = await admin
     .from('valuations')
@@ -134,7 +132,6 @@ Deno.serve(async (req: Request) => {
     return json({ error: 'Too many valuations. Please wait a minute and try again.' }, 429);
   }
 
-  // --- Quota / payment gate ----------------------------------------------------
   const { data: profile, error: profileError } = await admin
     .from('user_profiles')
     .select('free_valuations_used')
@@ -143,16 +140,14 @@ Deno.serve(async (req: Request) => {
   if (profileError) return json({ error: 'Could not load your profile.' }, 500);
 
   const freeUsed = profile?.free_valuations_used ?? 0;
-  const hasFreeRemaining = freeUsed < FREE_VALUATION_LIMIT;
   const isPaid = Boolean(paymentId);
-  if (!hasFreeRemaining && !isPaid) {
+  if (freeUsed >= FREE_VALUATION_LIMIT && !isPaid) {
     return json(
       { error: 'Free valuations exhausted. Payment required.', code: 'payment_required' },
       402,
     );
   }
 
-  // --- Build the model request -------------------------------------------------
   const contextLines = [
     `Tradition / style: ${input.tradition}`,
     `Medium: ${input.medium}`,
@@ -167,6 +162,8 @@ Deno.serve(async (req: Request) => {
       : 'Provenance: none provided',
   ].join('\n');
 
+  const purposeInstruction = PURPOSE_INSTRUCTIONS[purpose] ?? PURPOSE_INSTRUCTIONS.fair_market;
+
   const anthropic = new Anthropic({ apiKey: anthropicKey });
 
   let rawText: string;
@@ -180,13 +177,10 @@ Deno.serve(async (req: Request) => {
         {
           role: 'user',
           content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: mediaType, data: imageData },
-            },
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageData } },
             {
               type: 'text',
-              text: `Appraise this artwork using the three-layer methodology.\n\nArtwork context:\n${contextLines}\n\n${PRICING_OUTPUT_CONTRACT}`,
+              text: `Appraise this artwork using the three-layer methodology.\n\nArtwork context:\n${contextLines}\n\n${purposeInstruction}\n\n${PRICING_OUTPUT_CONTRACT}`,
             },
           ],
         },
@@ -203,7 +197,6 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  // --- Apply methodology guardrails (pure, shared) ------------------------------
   let result;
   try {
     const raw = extractJson(rawText) as Parameters<typeof assembleValuation>[0];
@@ -213,7 +206,6 @@ Deno.serve(async (req: Request) => {
     return json({ error: 'The valuation could not be generated. Please try again.' }, 502);
   }
 
-  // --- Persist + decrement quota (service role) --------------------------------
   const { data: inserted, error: insertError } = await admin
     .from('valuations')
     .insert({
@@ -228,6 +220,7 @@ Deno.serve(async (req: Request) => {
       year_created: input.yearCreated ?? null,
       condition: input.condition,
       provenance_notes: input.provenanceNotes ?? null,
+      purpose,
       estimated_low_inr: result.estimatedLowInr,
       estimated_mid_inr: result.estimatedMidInr,
       estimated_high_inr: result.estimatedHighInr,
@@ -244,7 +237,6 @@ Deno.serve(async (req: Request) => {
     return json({ error: 'Could not save the valuation.' }, 500);
   }
 
-  // Only consume a free credit when the user wasn't paying for this one.
   if (!isPaid) {
     await admin
       .from('user_profiles')

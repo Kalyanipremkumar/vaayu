@@ -3,7 +3,12 @@
  * upload it to the user's private storage folder, base64 the same compressed
  * bytes for the model, and invoke the server-side generate-valuation function.
  */
-import type { ArtworkCondition, Dimensions, ValuationResult } from '@vaayu/shared';
+import type {
+  ArtworkCondition,
+  Dimensions,
+  ValuationPurpose,
+  ValuationResult,
+} from '@vaayu/shared';
 import { supabase } from './supabase';
 import { compressImage } from './upload';
 
@@ -35,6 +40,7 @@ export interface SubmitValuationParams {
   yearCreated: number | null;
   condition: ArtworkCondition;
   provenanceNotes: string;
+  purpose: ValuationPurpose;
   /** Razorpay/Stripe payment id when this valuation was paid for. */
   paymentId?: string | null;
 }
@@ -68,6 +74,7 @@ export async function submitValuation(params: SubmitValuationParams): Promise<Sa
       yearCreated: params.yearCreated,
       condition: params.condition,
       provenanceNotes: params.provenanceNotes,
+      purpose: params.purpose,
       paymentId: params.paymentId ?? null,
     },
   });

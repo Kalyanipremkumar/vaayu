@@ -3,7 +3,13 @@
  * because it renders the @react-pdf <ReportDocument/> element.
  */
 import { pdf } from '@react-pdf/renderer';
-import { MEDIUMS, TRADITIONS, type ArtworkCondition, type Dimensions } from '@vaayu/shared';
+import {
+  MEDIUMS,
+  TRADITIONS,
+  VALUATION_PURPOSES,
+  type ArtworkCondition,
+  type Dimensions,
+} from '@vaayu/shared';
 import { ReportDocument } from '../components/valuation/ReportDocument';
 import type { SavedValuation } from './valuation';
 
@@ -75,6 +81,8 @@ export interface DownloadReportArgs {
   artistKnown: boolean;
   artistName: string;
   yearCreated: number | null;
+  /** Valuation purpose key (fair_market | insurance | auction). */
+  purpose?: string;
   /** Freshly uploaded file (result step) — takes precedence if present. */
   imageFile?: File | null;
   /** Signed image URL (re-download from history). */
@@ -101,6 +109,9 @@ export async function downloadValuationPdf(args: DownloadReportArgs): Promise<vo
       condition={titleCase(args.condition)}
       artist={args.artistKnown ? args.artistName || 'Unknown' : 'Unknown / unverified'}
       year={args.yearCreated ? String(args.yearCreated) : '—'}
+      purposeLabel={
+        VALUATION_PURPOSES.find((p) => p.key === args.purpose)?.label ?? 'Valuation report'
+      }
       result={args.result}
       imageDataUrl={imageDataUrl}
       reportId={reportId}

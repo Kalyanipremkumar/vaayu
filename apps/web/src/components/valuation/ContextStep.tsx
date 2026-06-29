@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import { MEDIUMS, TRADITIONS, type ArtworkCondition } from '@vaayu/shared';
+import {
+  MEDIUMS,
+  TRADITIONS,
+  VALUATION_PURPOSES,
+  type ArtworkCondition,
+  type ValuationPurpose,
+} from '@vaayu/shared';
 import { Button } from '../Button';
 import { SelectField, type SelectOption } from '../SelectField';
 import { TextField } from '../TextField';
@@ -14,6 +20,10 @@ const conditionOptions: SelectOption[] = [
   { value: 'fair', label: 'Fair' },
   { value: 'poor', label: 'Poor' },
 ];
+const purposeOptions: SelectOption[] = VALUATION_PURPOSES.map((p) => ({
+  value: p.key,
+  label: p.label,
+}));
 
 /** Step 2 — collect the context the pricing engine needs. */
 export function ContextStep() {
@@ -104,6 +114,14 @@ export function ContextStep() {
         options={conditionOptions}
         value={store.condition}
         onChange={(e) => store.update({ condition: e.target.value as ArtworkCondition })}
+      />
+
+      <SelectField
+        label="Valuation for"
+        name="purpose"
+        options={purposeOptions}
+        value={store.purpose}
+        onChange={(e) => store.update({ purpose: e.target.value as ValuationPurpose })}
       />
 
       <div className="flex flex-col gap-2">

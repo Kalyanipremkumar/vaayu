@@ -19,6 +19,7 @@ export interface ReportDocumentProps {
   condition: string;
   artist: string;
   year: string;
+  purposeLabel: string;
   result: ValuationResult;
   imageDataUrl: string | null;
   reportId: string;
@@ -158,7 +159,9 @@ export function ReportDocument(props: ReportDocumentProps) {
 
         <View style={s.body}>
           <Text style={s.title}>{props.title}</Text>
-          <Text style={s.subtitle}>Valuation report · Generated {props.dateStr}</Text>
+          <Text style={s.subtitle}>
+            {props.purposeLabel} · Generated {props.dateStr}
+          </Text>
 
           <View style={s.hero}>
             {props.imageDataUrl ? (

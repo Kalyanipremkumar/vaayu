@@ -4,6 +4,8 @@ interface ValuationReportProps {
   result: ValuationResult;
   /** Optional preview image (local object URL or signed URL). */
   imageUrl?: string | null;
+  /** Which value this represents, e.g. "Insurance / replacement". */
+  purposeLabel?: string;
 }
 
 /** A single methodology layer card. */
@@ -36,7 +38,7 @@ function LayerCard({
  * report page. Renders the price range prominently, the confidence score, the
  * three methodology layers, comparables, and the full narrative report.
  */
-export function ValuationReport({ result, imageUrl }: ValuationReportProps) {
+export function ValuationReport({ result, imageUrl, purposeLabel }: ValuationReportProps) {
   const { reasoning } = result;
   return (
     <article className="flex flex-col gap-8">
@@ -49,7 +51,9 @@ export function ValuationReport({ result, imageUrl }: ValuationReportProps) {
       ) : null}
 
       <header className="text-center">
-        <p className="font-body text-sm uppercase tracking-[0.2em] text-muted">Estimated value</p>
+        <p className="font-body text-sm uppercase tracking-[0.2em] text-muted">
+          {purposeLabel ? `Estimated ${purposeLabel.toLowerCase()}` : 'Estimated value'}
+        </p>
         <p className="mt-2 font-heading text-4xl text-ink md:text-5xl">
           {formatInr(result.estimatedMidInr)}
         </p>

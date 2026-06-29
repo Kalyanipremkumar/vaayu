@@ -10,6 +10,9 @@ export type ArtworkCondition = 'excellent' | 'good' | 'fair' | 'poor';
 /** Recognition tier an artist falls into, driving the Layer 2 multiplier. */
 export type ArtistTier = 'emerging' | 'mid-career' | 'established' | 'blue-chip';
 
+/** Which value the valuation represents — the same work values differently by purpose. */
+export type ValuationPurpose = 'fair_market' | 'insurance' | 'auction';
+
 /** Physical dimensions of a work, in centimetres. */
 export interface Dimensions {
   heightCm: number;
@@ -31,6 +34,7 @@ export interface ValuationInput {
   yearCreated?: number;
   condition: ArtworkCondition;
   provenanceNotes?: string;
+  purpose?: ValuationPurpose;
 }
 
 /** Per-layer reasoning the AI returns, mirrored into `valuations.ai_reasoning`. */
