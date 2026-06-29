@@ -8,6 +8,8 @@ import {
   FREE_VALUATION_LIMIT,
   PRICING_SYSTEM_PROMPT,
   PRICING_OUTPUT_CONTRACT,
+  ARTIST_MODE_PROMPT_ADDENDUM,
+  buildPromptContext,
   assembleValuation,
   sanitizeFreeText,
 } from './_shared.ts';
@@ -111,6 +113,7 @@ Deno.serve(async (req: Request) => {
     return json({ error: 'Invalid JSON body' }, 400);
   }
 
+  const mode = payload.mode === 'artist' ? 'artist' : 'collector';
   const imageBase64 = typeof payload.imageBase64 === 'string' ? payload.imageBase64 : '';
   const artworkImageUrl =
     typeof payload.artworkImageUrl === 'string' ? payload.artworkImageUrl : '';
@@ -127,7 +130,10 @@ Deno.serve(async (req: Request) => {
       : 'fair_market';
 
   if (!imageBase64) return json({ error: 'imageBase64 is required' }, 400);
-  if (!artworkImageUrl) return json({ error: 'artworkImageUrl is required' }, 400);
+  // artworkImageUrl is only persisted in collector mode; artist mode isn't saved (Phase 1).
+  if (mode === 'collector' && !artworkImageUrl) {
+    return json({ error: 'artworkImageUrl is required' }, 400);
+  }
   if (!tradition || !medium) return json({ error: 'tradition and medium are required' }, 400);
 
   const { mediaType, data: imageData } = parseImage(imageBase64);
@@ -136,6 +142,28 @@ Deno.serve(async (req: Request) => {
   }
 
   const dims = (payload.dimensions ?? {}) as { heightCm?: number; widthCm?: number };
+
+  // Deeper, optional evaluation criteria (both modes).
+  const rawCriteria = (payload.criteria ?? {}) as Record<string, unknown>;
+  const str = (v: unknown) => (typeof v === 'string' && v.trim() ? sanitizeFreeText(v) : undefined);
+  const num = (v: unknown) => (v === undefined || v === null || v === '' ? undefined : Number(v));
+  const editionType =
+    rawCriteria.editionType === 'unique' ||
+    rawCriteria.editionType === 'limited' ||
+    rawCriteria.editionType === 'open'
+      ? rawCriteria.editionType
+      : undefined;
+  const criteria = {
+    exhibitionHistory: str(rawCriteria.exhibitionHistory),
+    publications: str(rawCriteria.publications),
+    editionType,
+    seriesName: str(rawCriteria.seriesName),
+    signed: typeof rawCriteria.signed === 'boolean' ? rawCriteria.signed : undefined,
+    framed: typeof rawCriteria.framed === 'boolean' ? rawCriteria.framed : undefined,
+    priorSaleLowInr: num(rawCriteria.priorSaleLowInr),
+    priorSaleHighInr: num(rawCriteria.priorSaleHighInr),
+  };
+
   const input = {
     imageBase64,
     artistName: typeof payload.artistName === 'string' ? payload.artistName : undefined,
@@ -149,7 +177,24 @@ Deno.serve(async (req: Request) => {
       typeof payload.provenanceNotes === 'string'
         ? sanitizeFreeText(payload.provenanceNotes)
         : undefined,
+    criteria,
   };
+
+  // Artist Mode: the artist's self-reported career context (drives Layer 2).
+  const rawArtist = (payload.artist ?? {}) as Record<string, unknown>;
+  const artist =
+    mode === 'artist'
+      ? {
+          careerStage: str(rawArtist.careerStage),
+          yearsSelling: num(rawArtist.yearsSelling),
+          exhibitions3yr: num(rawArtist.exhibitions3yr),
+          institutionalCollectors: str(rawArtist.institutionalCollectors),
+          materialsCostInr: num(rawArtist.materialsCostInr),
+          hoursWorked: num(rawArtist.hoursWorked),
+          pastSalePrices: str(rawArtist.pastSalePrices),
+          recognition: str(rawArtist.recognition),
+        }
+      : undefined;
 
   const sinceIso = new Date(Date.now() - 60_000).toISOString();
   const { count: recentCount } = await admin
@@ -161,54 +206,68 @@ Deno.serve(async (req: Request) => {
     return json({ error: 'Too many valuations. Please wait a minute and try again.' }, 429);
   }
 
-  const { data: profile, error: profileError } = await admin
-    .from('user_profiles')
-    .select('free_valuations_used')
-    .eq('id', user.id)
-    .maybeSingle();
-  if (profileError) return json({ error: 'Could not load your profile.' }, 500);
-
-  const freeUsed = profile?.free_valuations_used ?? 0;
+  let freeUsed = 0;
   let isPaid = false;
   let verifiedPaymentId: string | null = null;
-  if (freeUsed >= FREE_VALUATION_LIMIT) {
-    // Free quota exhausted — require a verified Razorpay payment.
-    const rzpSecret = Deno.env.get('RAZORPAY_KEY_SECRET');
-    if (!rzpSecret) {
-      return json(
-        { error: 'Payments are not configured yet.', code: 'payments_unconfigured' },
-        503,
-      );
+
+  // Payment / free-quota gate applies to collector mode only. Artist Mode is
+  // free and unmetered in Phase 1 (no payment, not persisted).
+  if (mode === 'collector') {
+    const { data: profile, error: profileError } = await admin
+      .from('user_profiles')
+      .select('free_valuations_used')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (profileError) return json({ error: 'Could not load your profile.' }, 500);
+
+    freeUsed = profile?.free_valuations_used ?? 0;
+    if (freeUsed >= FREE_VALUATION_LIMIT) {
+      // Free quota exhausted — require a verified Razorpay payment.
+      const rzpSecret = Deno.env.get('RAZORPAY_KEY_SECRET');
+      if (!rzpSecret) {
+        return json(
+          { error: 'Payments are not configured yet.', code: 'payments_unconfigured' },
+          503,
+        );
+      }
+      if (!rzpOrderId || !rzpPaymentId || !rzpSignature) {
+        return json(
+          { error: 'Free valuations exhausted. Payment required.', code: 'payment_required' },
+          402,
+        );
+      }
+      const ok = await verifyRazorpay(rzpOrderId, rzpPaymentId, rzpSignature, rzpSecret);
+      if (!ok) {
+        return json({ error: 'Payment could not be verified.', code: 'payment_invalid' }, 402);
+      }
+      isPaid = true;
+      verifiedPaymentId = rzpPaymentId;
     }
-    if (!rzpOrderId || !rzpPaymentId || !rzpSignature) {
-      return json(
-        { error: 'Free valuations exhausted. Payment required.', code: 'payment_required' },
-        402,
-      );
-    }
-    const ok = await verifyRazorpay(rzpOrderId, rzpPaymentId, rzpSignature, rzpSecret);
-    if (!ok) {
-      return json({ error: 'Payment could not be verified.', code: 'payment_invalid' }, 402);
-    }
-    isPaid = true;
-    verifiedPaymentId = rzpPaymentId;
   }
 
-  const contextLines = [
-    `Tradition / style: ${input.tradition}`,
-    `Medium: ${input.medium}`,
-    `Dimensions: ${input.dimensions.heightCm} cm (H) x ${input.dimensions.widthCm} cm (W)`,
-    `Condition: ${input.condition}`,
-    input.artistKnown && input.artistName
-      ? `Artist (user-provided): ${input.artistName}`
-      : 'Artist: unknown / unverified',
-    input.yearCreated ? `Year created: ${input.yearCreated}` : 'Year created: not provided',
-    input.provenanceNotes
-      ? `Provenance notes: ${input.provenanceNotes}`
-      : 'Provenance: none provided',
-  ].join('\n');
-
   const purposeInstruction = PURPOSE_INSTRUCTIONS[purpose] ?? PURPOSE_INSTRUCTIONS.fair_market;
+  const contextLines = buildPromptContext({
+    artistKnown: input.artistKnown,
+    artistName: input.artistName,
+    tradition: input.tradition,
+    medium: input.medium,
+    dimensions: input.dimensions,
+    yearCreated: input.yearCreated,
+    condition: input.condition,
+    provenanceNotes: input.provenanceNotes,
+    purposeInstruction: mode === 'collector' ? purposeInstruction : undefined,
+    criteria,
+    artist,
+  });
+
+  const systemPrompt =
+    mode === 'artist'
+      ? `${PRICING_SYSTEM_PROMPT}\n\n${ARTIST_MODE_PROMPT_ADDENDUM}`
+      : PRICING_SYSTEM_PROMPT;
+  const task =
+    mode === 'artist'
+      ? 'Price this artwork for the artist using the three-layer methodology (return base × artist × work only).'
+      : 'Appraise this artwork using the three-layer methodology.';
 
   const anthropic = new Anthropic({ apiKey: anthropicKey });
 
@@ -218,7 +277,7 @@ Deno.serve(async (req: Request) => {
       model: MODEL,
       max_tokens: 8000,
       thinking: { type: 'adaptive' },
-      system: PRICING_SYSTEM_PROMPT,
+      system: systemPrompt,
       messages: [
         {
           role: 'user',
@@ -226,7 +285,7 @@ Deno.serve(async (req: Request) => {
             { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageData } },
             {
               type: 'text',
-              text: `Appraise this artwork using the three-layer methodology.\n\nArtwork context:\n${contextLines}\n\n${purposeInstruction}\n\n${PRICING_OUTPUT_CONTRACT}`,
+              text: `${task}\n\nArtwork context:\n${contextLines}\n\n${PRICING_OUTPUT_CONTRACT}`,
             },
           ],
         },
@@ -250,6 +309,13 @@ Deno.serve(async (req: Request) => {
   } catch (err) {
     console.error('Could not parse/assemble valuation:', err, rawText.slice(0, 500));
     return json({ error: 'The valuation could not be generated. Please try again.' }, 502);
+  }
+
+  // Artist Mode (Phase 1): return the three-layer valuation without persisting.
+  // The client applies the deterministic channel/posture math and renders. No
+  // free-quota increment, no payment, no valuations row.
+  if (mode === 'artist') {
+    return json({ ...result });
   }
 
   const { data: inserted, error: insertError } = await admin

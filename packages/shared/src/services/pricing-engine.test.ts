@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
   assembleValuation,
   blendConfidence,
+  channelPrice,
   clampArtistMultiplier,
   clampWorkAdjustment,
   combineLayers,
+  computeArtistPricing,
   contextCompletenessScore,
+  squareFeet,
   type RawLayerOutput,
 } from './pricing-engine';
 import type { ValuationInput } from '../types';
@@ -83,6 +86,89 @@ describe('blendConfidence', () => {
   it('never reports much higher than the weakest signal', () => {
     // Model very confident (95) but context thin (50) -> capped near context.
     expect(blendConfidence(95, 50)).toBeLessThanOrEqual(65);
+  });
+});
+
+describe('squareFeet', () => {
+  it('converts cm dimensions to square feet', () => {
+    // 60 × 45 cm = 2700 cm² ≈ 2.906 sq ft
+    expect(squareFeet({ heightCm: 60, widthCm: 45 })).toBeCloseTo(2.906, 2);
+  });
+
+  it('returns 0 for non-positive dimensions', () => {
+    expect(squareFeet({ heightCm: 0, widthCm: 45 })).toBe(0);
+  });
+});
+
+describe('channelPrice', () => {
+  it('grosses up a gallery quote so net equals the ask', () => {
+    // 40% commission: quote = ask / 0.6
+    expect(channelPrice('gallery', 28500, 40)).toEqual({
+      channel: 'gallery',
+      quotedInr: Math.round(28500 / 0.6),
+      netInr: 28500,
+    });
+  });
+
+  it('grosses up Varnam by its 10% commission', () => {
+    expect(channelPrice('varnam', 28500, 40)).toEqual({
+      channel: 'varnam',
+      quotedInr: Math.round(28500 / 0.9),
+      netInr: 28500,
+    });
+  });
+
+  it('keeps direct at the ask (net = quoted)', () => {
+    expect(channelPrice('direct', 28500, 40)).toEqual({
+      channel: 'direct',
+      quotedInr: 28500,
+      netInr: 28500,
+    });
+  });
+
+  it('lets the artist keep the commission premium', () => {
+    const c = channelPrice('commission', 28500, 40);
+    expect(c.quotedInr).toBe(c.netInr);
+    expect(c.quotedInr).toBeGreaterThan(28500);
+  });
+});
+
+describe('computeArtistPricing', () => {
+  it('applies posture to the ask and derives floor/ceiling/per-sq-ft', () => {
+    const r = computeArtistPricing({
+      netMidInr: 28500,
+      dimensions: { heightCm: 60, widthCm: 45 },
+      posture: 'balanced',
+      channels: ['gallery', 'direct'],
+      galleryCutPct: 40,
+    });
+    expect(r.askInr).toBe(28500); // balanced × 1.0
+    expect(r.floorInr).toBe(Math.round(28500 * 0.77));
+    expect(r.ceilingInr).toBe(Math.round(28500 * 1.27));
+    expect(r.perSqFtInr).toBe(Math.round(28500 / squareFeet({ heightCm: 60, widthCm: 45 })));
+    expect(r.channels).toHaveLength(2);
+  });
+
+  it('discounts the ask under a sell-quickly posture', () => {
+    const r = computeArtistPricing({
+      netMidInr: 28500,
+      dimensions: { heightCm: 60, widthCm: 45 },
+      posture: 'sell_quickly',
+      channels: ['direct'],
+      galleryCutPct: 40,
+    });
+    expect(r.askInr).toBe(Math.round(28500 * 0.9));
+  });
+
+  it('de-duplicates repeated channels', () => {
+    const r = computeArtistPricing({
+      netMidInr: 10000,
+      dimensions: { heightCm: 30, widthCm: 30 },
+      posture: 'balanced',
+      channels: ['gallery', 'gallery', 'direct'],
+      galleryCutPct: 40,
+    });
+    expect(r.channels.map((c) => c.channel)).toEqual(['gallery', 'direct']);
   });
 });
 

@@ -10,13 +10,26 @@
  */
 
 import {
+  ARTIST_PRICE_SPREAD,
   ARTIST_TIER_MULTIPLIERS,
+  ART_FAIR_PREMIUM,
+  COMMISSION_PREMIUM,
   ESTIMATE_SPREAD,
+  PRICING_POSTURE_FACTORS,
   UNKNOWN_ARTIST_MULTIPLIER,
+  VARNAM_COMMISSION_PCT,
   WORK_ADJUSTMENT_RANGE,
 } from '../constants/pricing';
 import { clamp } from '../utils/format';
-import type { ArtistTier, ValuationInput, ValuationResult } from '../types';
+import type {
+  ArtistTier,
+  ChannelPrice,
+  Dimensions,
+  PricingPosture,
+  SellingChannel,
+  ValuationInput,
+  ValuationResult,
+} from '../types';
 
 /** The raw, unvalidated layer output the model returns (before guardrails). */
 export interface RawLayerOutput {
@@ -83,6 +96,12 @@ export function contextCompletenessScore(input: ValuationInput): number {
   if (input.yearCreated) score += 10;
   if (input.provenanceNotes?.trim()) score += 20;
   if (input.dimensions.heightCm > 0 && input.dimensions.widthCm > 0) score += 10;
+  // Deeper optional criteria each reinforce the signal (the total is clamped to 100).
+  const c = input.criteria;
+  if (c?.exhibitionHistory?.trim()) score += 10;
+  if (c?.publications?.trim()) score += 10;
+  if (c?.editionType) score += 5;
+  if (c?.priorSaleLowInr || c?.priorSaleHighInr) score += 10;
   return clamp(score, 0, 100);
 }
 
@@ -125,4 +144,95 @@ export function assembleValuation(raw: RawLayerOutput, input: ValuationInput): V
     },
     fullReport: raw.fullReport,
   };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Artist Mode — pure forward-pricing math (Layers 4 & 5, floor/ceiling).
+// The net mid value comes from the collector valuation (Layers 1–3, server-side);
+// everything below is deterministic and fully unit-testable.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Square centimetres in one square foot. */
+const SQ_CM_PER_SQ_FT = 929.0304;
+
+/** Area of a work in square feet, given its centimetre dimensions. */
+export function squareFeet(dimensions: Dimensions): number {
+  const areaSqCm = Math.max(0, dimensions.heightCm) * Math.max(0, dimensions.widthCm);
+  return areaSqCm / SQ_CM_PER_SQ_FT;
+}
+
+/**
+ * Compute the headline (quoted) and net price for one channel from the artist's
+ * ask price. The principle: the artist's NET stays constant; the headline price
+ * is grossed up so commissions don't erode it. Art-fair and commission are the
+ * exceptions where the premium is kept (booth fees / bespoke nature).
+ */
+export function channelPrice(
+  channel: SellingChannel,
+  askInr: number,
+  galleryCutPct: number,
+): ChannelPrice {
+  switch (channel) {
+    case 'gallery': {
+      const cut = clamp(galleryCutPct, 0, 90) / 100;
+      const quoted = Math.round(askInr / (1 - cut));
+      return { channel, quotedInr: quoted, netInr: askInr };
+    }
+    case 'varnam': {
+      const quoted = Math.round(askInr / (1 - VARNAM_COMMISSION_PCT / 100));
+      return { channel, quotedInr: quoted, netInr: askInr };
+    }
+    case 'art_fair': {
+      // Headline premium covers booth fees; the artist still nets the ask.
+      const quoted = Math.round(askInr * ART_FAIR_PREMIUM);
+      return { channel, quotedInr: quoted, netInr: askInr };
+    }
+    case 'commission': {
+      // Bespoke premium is kept by the artist: net = quoted.
+      const quoted = Math.round(askInr * COMMISSION_PREMIUM);
+      return { channel, quotedInr: quoted, netInr: quoted };
+    }
+    case 'direct':
+    default:
+      // No commission; the artist receives the full ask (minus processing).
+      return { channel, quotedInr: askInr, netInr: askInr };
+  }
+}
+
+/** Inputs to {@link computeArtistPricing} beyond the underlying valuation. */
+export interface ArtistPricingParams {
+  /** Net mid value from the three-layer valuation (base × artist × work). */
+  netMidInr: number;
+  dimensions: Dimensions;
+  posture: PricingPosture;
+  channels: SellingChannel[];
+  galleryCutPct: number;
+}
+
+/** The numeric portion of an artist pricing result (no underlying valuation). */
+export interface ArtistPriceBreakdown {
+  askInr: number;
+  floorInr: number;
+  ceilingInr: number;
+  perSqFtInr: number;
+  areaSqFt: number;
+  channels: ChannelPrice[];
+}
+
+/**
+ * Apply Layer 5 (posture) to the net mid value to get the ask, then derive the
+ * floor, ceiling, per-square-foot rate, and Layer-4 channel prices. Pure math.
+ */
+export function computeArtistPricing(params: ArtistPricingParams): ArtistPriceBreakdown {
+  const { netMidInr, dimensions, posture, channels, galleryCutPct } = params;
+  const askInr = Math.round(netMidInr * (PRICING_POSTURE_FACTORS[posture] ?? 1));
+  const floorInr = Math.round(askInr * ARTIST_PRICE_SPREAD.floorFactor);
+  const ceilingInr = Math.round(askInr * ARTIST_PRICE_SPREAD.ceilingFactor);
+  const areaSqFt = squareFeet(dimensions);
+  const perSqFtInr = areaSqFt > 0 ? Math.round(askInr / areaSqFt) : 0;
+  const seen = new Set<SellingChannel>();
+  const channelPrices = channels
+    .filter((c) => (seen.has(c) ? false : (seen.add(c), true)))
+    .map((c) => channelPrice(c, askInr, galleryCutPct));
+  return { askInr, floorInr, ceilingInr, perSqFtInr, areaSqFt, channels: channelPrices };
 }
