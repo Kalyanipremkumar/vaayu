@@ -117,12 +117,20 @@ export function DashboardPage() {
       </header>
 
       <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
-        <Link
-          to="/valuations/new"
-          className="inline-flex rounded-full bg-ink px-6 py-3 font-body text-sm font-medium text-cream transition-colors hover:bg-ink/90"
-        >
-          {t('dashboard.newValuationPlus')}
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            to="/valuations/new"
+            className="inline-flex rounded-full bg-ink px-6 py-3 font-body text-sm font-medium text-cream transition-colors hover:bg-ink/90"
+          >
+            {t('dashboard.newValuationPlus')}
+          </Link>
+          <Link
+            to="/price"
+            className="inline-flex items-center rounded-full border border-gold px-6 py-3 font-body text-sm font-medium text-ink transition-colors hover:bg-gold/10"
+          >
+            {t('dashboard.priceArt')}
+          </Link>
+        </div>
         {valuations && valuations.length > 0 ? (
           <div className="w-56">
             <SelectField

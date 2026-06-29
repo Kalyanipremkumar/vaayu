@@ -3,6 +3,8 @@ import { Trans, useTranslation } from 'react-i18next';
 import { FREE_VALUATION_LIMIT } from '@vaayu/shared';
 import { Button } from '../components/Button';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
+import { ModeToggle } from '../components/ModeToggle';
+import { useAppMode } from '../store/appModeStore';
 
 /**
  * Landing page. A dark ink hero with gold accents over Vaayu's cream canvas,
@@ -11,6 +13,8 @@ import { LanguageSwitcher } from '../components/LanguageSwitcher';
  */
 export function HomePage() {
   const { t } = useTranslation();
+  const { mode } = useAppMode();
+  const isArtist = mode === 'artist';
   const layers = [1, 2, 3].map((n) => ({
     n: String(n).padStart(2, '0'),
     title: t(`landing.layer${n}Title`),
@@ -42,28 +46,35 @@ export function HomePage() {
 
       <main className="mx-auto max-w-5xl px-6 pb-20">
         <section className="overflow-hidden rounded-2xl bg-ink px-8 py-16 text-center md:px-16 md:py-24">
+          <div className="mb-8 flex justify-center">
+            <ModeToggle variant="light" />
+          </div>
           <p className="font-body text-xs uppercase tracking-[0.35em] text-gold">
-            {t('landing.eyebrow')}
+            {t(isArtist ? 'landingArtist.eyebrow' : 'landing.eyebrow')}
           </p>
           <h1 className="mx-auto mt-6 max-w-3xl font-heading text-5xl font-medium leading-[1.05] text-cream md:text-7xl">
             <Trans
-              i18nKey="landing.headline"
+              i18nKey={isArtist ? 'landingArtist.headline' : 'landing.headline'}
               components={{ 1: <em className="italic text-gold" /> }}
             />
           </h1>
           <p className="mx-auto mt-6 max-w-xl font-body text-base leading-relaxed text-cream/70 md:text-lg">
-            {t('landing.lead')}
+            {t(isArtist ? 'landingArtist.lead' : 'landing.lead')}
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <Link to="/signup">
-              <Button variant="gold">{t('landing.getStartedFree')}</Button>
+              <Button variant="gold">
+                {isArtist ? t('landingArtist.cta') : t('landing.getStartedFree')}
+              </Button>
             </Link>
             <Link to="/login">
               <Button variant="outlineLight">{t('common.signIn')}</Button>
             </Link>
           </div>
           <p className="mt-6 font-body text-xs text-cream/40">
-            {t('landing.freeNote', { count: FREE_VALUATION_LIMIT })}
+            {isArtist
+              ? t('landingArtist.freeNote')
+              : t('landing.freeNote', { count: FREE_VALUATION_LIMIT })}
           </p>
         </section>
 

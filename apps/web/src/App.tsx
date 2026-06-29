@@ -9,6 +9,7 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { NewValuationPage } from './pages/NewValuationPage';
+import { ArtistPricingPage } from './pages/ArtistPricingPage';
 import { ValuationReportPage } from './pages/ValuationReportPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { OnboardingPage } from './pages/OnboardingPage';
@@ -50,6 +51,14 @@ export function App() {
             element={
               <ProtectedRoute>
                 <ValuationReportPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/price"
+            element={
+              <ProtectedRoute>
+                <ArtistPricingPage />
               </ProtectedRoute>
             }
           />
