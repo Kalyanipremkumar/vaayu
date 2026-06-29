@@ -85,6 +85,19 @@ export function UploadStep() {
       />
 
       {error ? <p className="font-body text-sm text-red-700">{error}</p> : null}
+
+      {!imagePreviewUrl ? (
+        <div className="rounded-lg border border-border bg-gold/[0.04] p-4">
+          <p className="font-body text-xs font-medium uppercase tracking-wider text-gold">
+            For the most accurate valuation
+          </p>
+          <ul className="mt-2 space-y-1 font-body text-sm text-muted">
+            <li>· Shoot the work flat-on in even, natural light — avoid glare and shadows.</li>
+            <li>· Fill the frame with the whole piece; keep the full edges visible.</li>
+            <li>· Use the highest resolution you can; keep colours true to the original.</li>
+          </ul>
+        </div>
+      ) : null}
     </div>
   );
 }
