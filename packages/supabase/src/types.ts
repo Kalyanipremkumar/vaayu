@@ -14,6 +14,42 @@ export type Database = {
   };
   public: {
     Tables: {
+      payments: {
+        Row: {
+          amount: number | null;
+          created_at: string;
+          currency: string | null;
+          id: string;
+          provider: string;
+          provider_order_id: string | null;
+          provider_payment_id: string | null;
+          status: string;
+          user_id: string | null;
+        };
+        Insert: {
+          amount?: number | null;
+          created_at?: string;
+          currency?: string | null;
+          id?: string;
+          provider?: string;
+          provider_order_id?: string | null;
+          provider_payment_id?: string | null;
+          status?: string;
+          user_id?: string | null;
+        };
+        Update: {
+          amount?: number | null;
+          created_at?: string;
+          currency?: string | null;
+          id?: string;
+          provider?: string;
+          provider_order_id?: string | null;
+          provider_payment_id?: string | null;
+          status?: string;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       subscriptions: {
         Row: {
           expires_at: string | null;
