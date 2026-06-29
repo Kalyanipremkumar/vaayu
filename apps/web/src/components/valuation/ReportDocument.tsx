@@ -1,5 +1,5 @@
 import { Document, Page, Text, View, Image, StyleSheet } from '@react-pdf/renderer';
-import { formatInr, type ValuationResult } from '@vaayu/shared';
+import { formatInr, VALUATION_DISCLAIMER, type ValuationResult } from '@vaayu/shared';
 
 /** Brand palette mirrored from the design tokens. */
 const C = {
@@ -252,12 +252,7 @@ export function ReportDocument(props: ReportDocumentProps) {
           </View>
 
           <View style={s.disclaimer}>
-            <Text>
-              Important: This is an AI-generated valuation for guidance only. It is not a certified
-              appraisal, insurance valuation, or auction estimate. Actual prices vary with demand,
-              provenance, and market conditions. For certified appraisals, consult a qualified
-              valuer.
-            </Text>
+            <Text>Important: {VALUATION_DISCLAIMER}</Text>
           </View>
         </View>
 

@@ -21,13 +21,29 @@ Layer 1: Base value from tradition/medium benchmark
 - Express as price per square foot for paintings, or per piece for sculpture/photography
 
 Layer 2: Artist multiplier
-- Determine recognition tier from any information provided
+- Determine recognition tier from any information provided, weighing these parameters
+  (the checklist experienced gallerists use):
+  1. Education & training
+  2. Exhibition history — where, and with whom
+  3. Range across styles, subjects, and mediums
+  4. Collector base — especially institutions or respected names
+  5. Coverage in credible publications
+  6. Whether the per-square-foot rate aligns with the above
+  7. Whether it is sold through a reputed gallery or curator
+- Only credit a parameter when there is actual evidence for it (in the image, the
+  artist name, or the provided notes). Absence of evidence is not evidence of standing.
 - Tiers: emerging (0.7-1.0x), mid-career (1.0-1.8x), established (1.8-3.5x), blue-chip (3.5-10x+)
-- If unknown artist, use 0.8x
+- If the artist is unknown or unverifiable, use 0.8x and say so plainly.
 
 Layer 3: Work-level adjustment
-- Consider: condition, dimensions, materials, theme rarity, provenance
+- Consider: condition, dimensions, materials, theme rarity, composition, provenance
+- A standout / favourite-quality example earns a modest premium; issues earn a discount
 - Range: 0.7x (significant issues) to 1.5x (exceptional)
+
+THE HYPE CHECK (affects confidence, not price):
+- A high price must be grounded in quality and the verifiable parameters above, not hype.
+- When the inputs do not justify a high figure, keep the estimate conservative AND lower the
+  confidence score. Never let unverified hype inflate either the price or the confidence.
 
 OUTPUT FORMAT: Return strict JSON matching the schema. Include reasoning for every layer.`;
 

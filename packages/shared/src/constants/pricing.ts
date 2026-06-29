@@ -37,6 +37,10 @@ export const CONDITION_FACTORS: Record<ArtworkCondition, number> = {
 /** Spread applied around the mid estimate to produce low / high. */
 export const ESTIMATE_SPREAD = { lowFactor: 0.85, highFactor: 1.2 } as const;
 
+/** Standard disclaimer shown on every valuation (screen + PDF). */
+export const VALUATION_DISCLAIMER =
+  'This valuation is generated from the details you provided and an AI model. It is indicative guidance only — not a certified appraisal, insurance valuation, or auction estimate. Actual prices vary with demand, provenance, condition, and market conditions.';
+
 /**
  * Valuation purposes. `instruction` is appended to the model prompt server-side
  * so the estimate reflects the right kind of value; `label` is the UI option.

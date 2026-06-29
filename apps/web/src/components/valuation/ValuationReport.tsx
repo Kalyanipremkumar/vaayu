@@ -1,4 +1,9 @@
-import { formatInr, formatInrRange, type ValuationResult } from '@vaayu/shared';
+import {
+  formatInr,
+  formatInrRange,
+  VALUATION_DISCLAIMER,
+  type ValuationResult,
+} from '@vaayu/shared';
 
 interface ValuationReportProps {
   result: ValuationResult;
@@ -112,7 +117,7 @@ export function ValuationReport({ result, imageUrl, purposeLabel }: ValuationRep
       ) : null}
 
       <p className="border-t border-border pt-4 font-body text-xs text-muted">
-        This is an AI-generated estimate for guidance only, not a certified appraisal.
+        {VALUATION_DISCLAIMER}
       </p>
     </article>
   );

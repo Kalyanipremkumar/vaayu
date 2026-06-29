@@ -33,12 +33,20 @@ export function HomePage() {
         <span className="font-body text-sm font-medium uppercase tracking-[0.3em] text-ink">
           Vaayu
         </span>
-        <Link
-          to="/login"
-          className="font-body text-sm text-muted underline-offset-4 transition-colors hover:text-ink hover:underline"
-        >
-          Sign in
-        </Link>
+        <nav className="flex items-center gap-6">
+          <Link
+            to="/how-it-works"
+            className="font-body text-sm text-muted underline-offset-4 transition-colors hover:text-ink hover:underline"
+          >
+            How it works
+          </Link>
+          <Link
+            to="/login"
+            className="font-body text-sm text-muted underline-offset-4 transition-colors hover:text-ink hover:underline"
+          >
+            Sign in
+          </Link>
+        </nav>
       </header>
 
       <main className="mx-auto max-w-5xl px-6 pb-20">
