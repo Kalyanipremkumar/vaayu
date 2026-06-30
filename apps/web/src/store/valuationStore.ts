@@ -4,11 +4,27 @@
  * into @vaayu/shared later without renaming.
  */
 import { create } from 'zustand';
-import type { ArtworkCondition, Dimensions, ValuationPurpose } from '@vaayu/shared';
+import type { ArtworkCondition, Dimensions, EditionType, ValuationPurpose } from '@vaayu/shared';
 import type { SavedValuation } from '../lib/valuation';
 
 /** Steps in the valuation wizard. */
 export type ValuationStep = 'upload' | 'context' | 'review' | 'pay' | 'processing' | 'result';
+
+/**
+ * Form-friendly shape of the deeper, optional evaluation criteria. Text fields
+ * stay as strings; converted to {@link ValuationCriteria} (omitting empties) at
+ * submit time in lib/valuation.ts.
+ */
+export interface ValuationCriteriaDraft {
+  exhibitionHistory: string;
+  publications: string;
+  editionType: '' | EditionType;
+  seriesName: string;
+  signed: boolean;
+  framed: boolean;
+  priorSaleLow: string;
+  priorSaleHigh: string;
+}
 
 interface ValuationDraft {
   imageFile: File | null;
@@ -23,7 +39,19 @@ interface ValuationDraft {
   condition: ArtworkCondition;
   provenanceNotes: string;
   purpose: ValuationPurpose;
+  criteria: ValuationCriteriaDraft;
 }
+
+const emptyCriteria: ValuationCriteriaDraft = {
+  exhibitionHistory: '',
+  publications: '',
+  editionType: '',
+  seriesName: '',
+  signed: false,
+  framed: false,
+  priorSaleLow: '',
+  priorSaleHigh: '',
+};
 
 interface ValuationState extends ValuationDraft {
   step: ValuationStep;
@@ -48,6 +76,7 @@ const initialDraft: ValuationDraft = {
   condition: 'good',
   provenanceNotes: '',
   purpose: 'fair_market',
+  criteria: emptyCriteria,
 };
 
 export const useValuationStore = create<ValuationState>((set) => ({

@@ -5,6 +5,7 @@ import {
   TRADITIONS,
   VALUATION_PURPOSES,
   type ArtworkCondition,
+  type EditionType,
   type ValuationPurpose,
 } from '@vaayu/shared';
 import { Button } from '../Button';
@@ -34,6 +35,14 @@ export function ContextStep() {
   const { t } = useTranslation();
   const store = useValuationStore();
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const { criteria } = store;
+  const [showMore, setShowMore] = useState(
+    Object.values(criteria).some((v) => v !== '' && v !== false),
+  );
+
+  /** Patch the criteria sub-object in the store. */
+  const setC = (patch: Partial<typeof criteria>) =>
+    store.update({ criteria: { ...criteria, ...patch } });
 
   const conditionOptions: SelectOption[] = CONDITION_KEYS.map((key) => ({
     value: key,
@@ -43,6 +52,12 @@ export function ContextStep() {
     value: p.key,
     label: t(PURPOSE_LABEL_KEYS[p.key as ValuationPurpose] ?? p.label),
   }));
+  const editionOptions: SelectOption[] = [
+    { value: '', label: t('wizard.editionNotSpecified') },
+    { value: 'unique', label: t('wizard.editionUnique') },
+    { value: 'limited', label: t('wizard.editionLimited') },
+    { value: 'open', label: t('wizard.editionOpen') },
+  ];
 
   function validateAndContinue() {
     const next: Record<string, string> = {};
@@ -171,6 +186,99 @@ export function ContextStep() {
         value={store.provenanceNotes}
         onChange={(e) => store.update({ provenanceNotes: e.target.value })}
       />
+
+      {/* Deeper, optional criteria — collapsed by default to keep the form light. */}
+      {showMore ? (
+        <div className="flex flex-col gap-5 rounded-xl border border-border bg-gold/[0.03] p-4">
+          <p className="font-body text-xs text-muted">{t('wizard.moreDetailHint')}</p>
+
+          <div className="grid grid-cols-2 gap-4">
+            <SelectField
+              label={t('wizard.edition')}
+              name="edition"
+              options={editionOptions}
+              value={criteria.editionType}
+              onChange={(e) => setC({ editionType: e.target.value as '' | EditionType })}
+            />
+            <TextField
+              label={t('wizard.series')}
+              name="series"
+              value={criteria.seriesName}
+              placeholder={t('wizard.seriesHint')}
+              onChange={(e) => setC({ seriesName: e.target.value })}
+            />
+          </div>
+
+          <div className="flex gap-6">
+            <label className="flex items-center gap-2 font-body text-sm text-muted">
+              <input
+                type="checkbox"
+                checked={criteria.signed}
+                onChange={(e) => setC({ signed: e.target.checked })}
+                className="h-4 w-4 rounded border-border text-ink focus:ring-gold"
+              />
+              {t('wizard.signed')}
+            </label>
+            <label className="flex items-center gap-2 font-body text-sm text-muted">
+              <input
+                type="checkbox"
+                checked={criteria.framed}
+                onChange={(e) => setC({ framed: e.target.checked })}
+                className="h-4 w-4 rounded border-border text-ink focus:ring-gold"
+              />
+              {t('wizard.framed')}
+            </label>
+          </div>
+
+          <TextAreaField
+            label={t('wizard.exhibitionHistory')}
+            name="exhibitionHistory"
+            hint={t('wizard.exhibitionHistoryHint')}
+            value={criteria.exhibitionHistory}
+            onChange={(e) => setC({ exhibitionHistory: e.target.value })}
+          />
+
+          <TextField
+            label={t('wizard.publications')}
+            name="publications"
+            value={criteria.publications}
+            placeholder={t('wizard.publicationsHint')}
+            onChange={(e) => setC({ publications: e.target.value })}
+          />
+
+          <div>
+            <label className="mb-1 block font-body text-sm text-ink">
+              {t('wizard.priorSales')}
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              <TextField
+                label={t('wizard.priorSaleLow')}
+                name="priorSaleLow"
+                type="number"
+                min={0}
+                value={criteria.priorSaleLow}
+                onChange={(e) => setC({ priorSaleLow: e.target.value })}
+              />
+              <TextField
+                label={t('wizard.priorSaleHigh')}
+                name="priorSaleHigh"
+                type="number"
+                min={0}
+                value={criteria.priorSaleHigh}
+                onChange={(e) => setC({ priorSaleHigh: e.target.value })}
+              />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowMore(true)}
+          className="self-start font-body text-sm text-gold underline underline-offset-4 hover:text-ink"
+        >
+          {t('wizard.moreDetailToggle')}
+        </button>
+      )}
 
       <div className="mt-2 flex justify-between">
         <Button variant="ghost" onClick={() => store.setStep('upload')}>

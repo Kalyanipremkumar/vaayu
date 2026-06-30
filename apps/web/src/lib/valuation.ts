@@ -6,12 +6,30 @@
 import type {
   ArtworkCondition,
   Dimensions,
+  ValuationCriteria,
   ValuationPurpose,
   ValuationResult,
 } from '@vaayu/shared';
 import { supabase } from './supabase';
 import { compressImage } from './upload';
 import type { RazorpayPayment } from './payments';
+import type { ValuationCriteriaDraft } from '../store/valuationStore';
+
+/** Convert the form-friendly criteria draft to the engine shape, omitting empties. */
+function toCriteria(d: ValuationCriteriaDraft): ValuationCriteria | undefined {
+  const c: ValuationCriteria = {};
+  if (d.exhibitionHistory.trim()) c.exhibitionHistory = d.exhibitionHistory.trim();
+  if (d.publications.trim()) c.publications = d.publications.trim();
+  if (d.editionType) c.editionType = d.editionType;
+  if (d.seriesName.trim()) c.seriesName = d.seriesName.trim();
+  if (d.signed) c.signed = true;
+  if (d.framed) c.framed = true;
+  const low = Number(d.priorSaleLow);
+  const high = Number(d.priorSaleHigh);
+  if (d.priorSaleLow && low > 0) c.priorSaleLowInr = low;
+  if (d.priorSaleHigh && high > 0) c.priorSaleHighInr = high;
+  return Object.keys(c).length > 0 ? c : undefined;
+}
 
 const BUCKET = 'valuation-uploads';
 
@@ -42,6 +60,8 @@ export interface SubmitValuationParams {
   condition: ArtworkCondition;
   provenanceNotes: string;
   purpose: ValuationPurpose;
+  /** Deeper optional criteria collected in the wizard. */
+  criteria: ValuationCriteriaDraft;
   /** Razorpay payment, present when this valuation was paid for. */
   payment?: RazorpayPayment | null;
 }
@@ -76,6 +96,7 @@ export async function submitValuation(params: SubmitValuationParams): Promise<Sa
       condition: params.condition,
       provenanceNotes: params.provenanceNotes,
       purpose: params.purpose,
+      criteria: toCriteria(params.criteria),
       razorpayOrderId: params.payment?.razorpayOrderId ?? null,
       razorpayPaymentId: params.payment?.razorpayPaymentId ?? null,
       razorpaySignature: params.payment?.razorpaySignature ?? null,

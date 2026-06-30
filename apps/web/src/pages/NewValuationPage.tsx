@@ -45,6 +45,7 @@ export function NewValuationPage() {
         condition: store.condition,
         provenanceNotes: store.provenanceNotes,
         purpose: store.purpose,
+        criteria: store.criteria,
         payment,
       });
     },
