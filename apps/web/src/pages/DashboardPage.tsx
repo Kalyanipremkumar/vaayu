@@ -254,9 +254,24 @@ export function DashboardPage() {
           <LanguageSwitcher />
           <Link
             to="/settings"
-            className="font-body text-sm text-muted underline-offset-4 hover:text-ink hover:underline"
+            aria-label={t('common.profile')}
+            title={t('common.profile')}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted transition-colors hover:border-gold hover:text-ink"
           >
-            {t('common.settings')}
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
+            </svg>
           </Link>
           <Button variant="outline" onClick={handleSignOut}>
             {t('common.signOut')}
