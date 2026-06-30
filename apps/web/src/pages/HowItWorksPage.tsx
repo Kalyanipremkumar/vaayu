@@ -18,9 +18,7 @@ export function HowItWorksPage() {
   return (
     <div className="min-h-screen bg-cream">
       <header className="mx-auto flex max-w-3xl items-center justify-between px-6 py-5">
-        <Link to="/">
-          <Logo markClass="h-9" />
-        </Link>
+        <Logo markClass="h-9" />
         <div className="flex items-center gap-4">
           <Link
             to="/signup"

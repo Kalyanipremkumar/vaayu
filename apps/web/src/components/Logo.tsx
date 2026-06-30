@@ -1,4 +1,8 @@
+import { Link } from 'react-router-dom';
+
 interface LogoProps {
+  /** Where the logo links to. Defaults to the home page. */
+  to?: string;
   /** Tailwind height class for the emblem, e.g. 'h-8'. */
   markClass?: string;
   /** Show the "Vaayu" wordmark next to the emblem. */
@@ -12,9 +16,10 @@ interface LogoProps {
 
 /**
  * Vaayu brand lockup — the two-feather emblem (warm + cool, mirroring the
- * Artist / Collector duality) beside the serif wordmark.
+ * Artist / Collector duality) beside the serif wordmark. Links home by default.
  */
 export function Logo({
+  to = '/',
   markClass = 'h-9',
   wordmark = true,
   wordmarkClass = 'text-ink',
@@ -22,13 +27,17 @@ export function Logo({
   className = '',
 }: LogoProps) {
   return (
-    <span className={`inline-flex items-center gap-2.5 ${className}`}>
+    <Link
+      to={to}
+      aria-label="Vaayu — home"
+      className={`inline-flex items-center gap-2.5 transition-opacity hover:opacity-80 ${className}`}
+    >
       <img src="/vaayu-mark.png" alt="Vaayu" className={`${markClass} w-auto`} />
       {wordmark ? (
         <span className={`font-heading ${wordmarkSize} font-medium tracking-wide ${wordmarkClass}`}>
           Vaayu
         </span>
       ) : null}
-    </span>
+    </Link>
   );
 }
