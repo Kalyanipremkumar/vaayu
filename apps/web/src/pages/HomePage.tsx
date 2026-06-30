@@ -26,18 +26,18 @@ export function HomePage() {
 
   return (
     <div className="min-h-screen bg-cream">
-      <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
-        <Logo markClass="h-9" />
-        <nav className="flex items-center gap-5">
+      <header className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-y-2 px-4 py-4 sm:px-6 sm:py-5">
+        <Logo markClass="h-8 sm:h-9" wordmarkSize="text-xl sm:text-2xl" />
+        <nav className="flex items-center gap-3 sm:gap-5">
           <Link
             to="/how-it-works"
-            className="font-body text-sm text-muted underline-offset-4 transition-colors hover:text-ink hover:underline"
+            className="whitespace-nowrap font-body text-sm text-muted underline-offset-4 transition-colors hover:text-ink hover:underline"
           >
             {t('common.howItWorks')}
           </Link>
           <Link
             to={user ? '/dashboard' : '/login'}
-            className="font-body text-sm text-muted underline-offset-4 transition-colors hover:text-ink hover:underline"
+            className="whitespace-nowrap font-body text-sm text-muted underline-offset-4 transition-colors hover:text-ink hover:underline"
           >
             {user ? t('common.dashboard') : t('common.signIn')}
           </Link>

@@ -138,12 +138,12 @@ export function HowItWorksPage() {
 
   return (
     <div className="min-h-screen bg-cream">
-      <header className="mx-auto flex max-w-3xl items-center justify-between px-6 py-5">
-        <Logo markClass="h-9" />
-        <div className="flex items-center gap-4">
+      <header className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-y-2 px-4 py-4 sm:px-6 sm:py-5">
+        <Logo markClass="h-8 sm:h-9" wordmarkSize="text-xl sm:text-2xl" />
+        <div className="flex items-center gap-3 sm:gap-4">
           <Link
             to="/signup"
-            className="font-body text-sm text-muted underline-offset-4 hover:text-ink hover:underline"
+            className="whitespace-nowrap font-body text-sm text-muted underline-offset-4 hover:text-ink hover:underline"
           >
             {t('common.getStarted')}
           </Link>
