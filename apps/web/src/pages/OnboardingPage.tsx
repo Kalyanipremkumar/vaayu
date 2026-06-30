@@ -52,9 +52,7 @@ export function OnboardingPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-12">
-      <p className="mb-2 text-center font-body text-sm uppercase tracking-[0.2em] text-gold">
-        Vaayu
-      </p>
+      <img src="/vaayu-mark.png" alt="Vaayu" className="mx-auto mb-4 h-12 w-auto" />
 
       {step === 'role' ? (
         <>

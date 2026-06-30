@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { formatInr, TRADITIONS } from '@vaayu/shared';
 import { Button } from '../components/Button';
+import { Logo } from '../components/Logo';
 import { SelectField } from '../components/SelectField';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { ModeToggle } from '../components/ModeToggle';
@@ -244,8 +245,8 @@ export function DashboardPage() {
     <main className="mx-auto max-w-3xl px-6 py-10">
       <header className="flex items-start justify-between border-b border-border pb-6">
         <div>
-          <p className="font-body text-sm uppercase tracking-[0.2em] text-gold">Vaayu</p>
-          <h1 className="mt-1 font-heading text-3xl text-ink">
+          <Logo markClass="h-7" wordmarkSize="text-xl" />
+          <h1 className="mt-2 font-heading text-3xl text-ink">
             {isArtist ? t('dashboard.artistTitle') : t('dashboard.title')}
           </h1>
         </div>

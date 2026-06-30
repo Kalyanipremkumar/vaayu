@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Trans, useTranslation } from 'react-i18next';
 import { Button } from '../components/Button';
+import { Logo } from '../components/Logo';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { ModeToggle } from '../components/ModeToggle';
 import { useAppMode } from '../store/appModeStore';
@@ -24,9 +25,7 @@ export function HomePage() {
   return (
     <div className="min-h-screen bg-cream">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
-        <span className="font-body text-sm font-medium uppercase tracking-[0.3em] text-ink">
-          Vaayu
-        </span>
+        <Logo markClass="h-9" />
         <nav className="flex items-center gap-5">
           <Link
             to="/how-it-works"
@@ -46,6 +45,7 @@ export function HomePage() {
 
       <main className="mx-auto max-w-5xl px-6 pb-20">
         <section className="overflow-hidden rounded-2xl bg-ink px-8 py-16 text-center md:px-16 md:py-24">
+          <img src="/vaayu-mark.png" alt="Vaayu" className="mx-auto mb-8 h-24 w-auto md:h-28" />
           <div className="mb-8 flex justify-center">
             <ModeToggle variant="light" />
           </div>

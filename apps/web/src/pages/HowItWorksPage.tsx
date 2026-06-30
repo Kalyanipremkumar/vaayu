@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Trans, useTranslation } from 'react-i18next';
 import { VALUATION_DISCLAIMER } from '@vaayu/shared';
 import { Button } from '../components/Button';
+import { Logo } from '../components/Logo';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 
 /** Public page explaining Vaayu's valuation methodology and the gallerist's checklist. */
@@ -17,8 +18,8 @@ export function HowItWorksPage() {
   return (
     <div className="min-h-screen bg-cream">
       <header className="mx-auto flex max-w-3xl items-center justify-between px-6 py-5">
-        <Link to="/" className="font-body text-sm font-medium uppercase tracking-[0.3em] text-ink">
-          Vaayu
+        <Link to="/">
+          <Logo markClass="h-9" />
         </Link>
         <div className="flex items-center gap-4">
           <Link
