@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
-type Variant = 'primary' | 'gold' | 'outline' | 'outlineLight' | 'ghost';
+type Variant = 'primary' | 'gold' | 'orange' | 'outline' | 'outlineLight' | 'ghost';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -16,6 +16,8 @@ const variants: Record<Variant, string> = {
   primary: 'bg-ink text-cream hover:bg-ink/90',
   // Warm gold, ink text — for primary CTAs, especially on the dark hero.
   gold: 'bg-gold text-ink hover:bg-gold/90',
+  // Vivid orange, cream text — the highest-emphasis conversion CTA.
+  orange: 'bg-orange text-cream hover:bg-orange/90',
   // Hairline outline on light backgrounds.
   outline: 'border border-border bg-transparent text-ink hover:bg-ink/[0.04]',
   // Outline for dark backgrounds (cream border + text).

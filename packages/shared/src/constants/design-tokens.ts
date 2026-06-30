@@ -16,6 +16,10 @@ export const COLORS = {
   cream: '#FFFDF8',
   /** Accent — Varnam Studio warm gold. */
   gold: '#AB8838',
+  /** Vivid CTA accent — warm orange from the emblem's warm feather. */
+  orange: '#F9923E',
+  /** Soft warm fill. */
+  beige: '#F0DEB4',
   /** Secondary text. */
   muted: '#5C5C5C',
   /** Borders / hairlines — warm sand. */

@@ -589,7 +589,9 @@ export function ArtistPricingPage() {
           </p>
         ) : null}
 
-        <Button onClick={handleSubmit}>{t('artist.getPricing')}</Button>
+        <Button variant="orange" onClick={handleSubmit}>
+          {t('artist.getPricing')}
+        </Button>
       </div>
     </main>
   );

@@ -63,7 +63,7 @@ export function HomePage() {
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <Link to="/signup">
-              <Button variant="gold">
+              <Button variant="orange">
                 {isArtist ? t('landingArtist.cta') : t('landing.getStartedFree')}
               </Button>
             </Link>
@@ -134,7 +134,7 @@ export function HomePage() {
           </h2>
           <div className="mt-8">
             <Link to="/signup">
-              <Button variant="primary">{t('landing.startValuation')}</Button>
+              <Button variant="orange">{t('landing.startValuation')}</Button>
             </Link>
           </div>
           <p className="mt-16 font-heading text-lg italic text-gold">{t('landing.tagline')}</p>

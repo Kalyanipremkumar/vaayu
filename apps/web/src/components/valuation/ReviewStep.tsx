@@ -133,11 +133,11 @@ export function ReviewStep({ onSubmit, submitting, error }: ReviewStepProps) {
           {t('common.back')}
         </Button>
         {needsPayment ? (
-          <Button onClick={handlePayAndSubmit} loading={paying || submitting}>
+          <Button variant="orange" onClick={handlePayAndSubmit} loading={paying || submitting}>
             {t('wizard.payAndValue')}
           </Button>
         ) : (
-          <Button onClick={() => onSubmit()} loading={submitting}>
+          <Button variant="orange" onClick={() => onSubmit()} loading={submitting}>
             {t('wizard.getValuation')}
           </Button>
         )}

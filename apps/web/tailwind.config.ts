@@ -20,6 +20,8 @@ const config: Config = {
         ink: '#3E1324', // Varnam burgundy (was deep teal #0E3A38)
         cream: '#FFFDF8',
         gold: '#AB8838', // Varnam gold (was #C8A84B)
+        orange: '#F9923E', // vivid CTA accent (from the Varnam emblem's warm feather)
+        beige: '#F0DEB4', // soft warm fill
         muted: '#5C5C5C',
         border: '#E4D9C6',
       },

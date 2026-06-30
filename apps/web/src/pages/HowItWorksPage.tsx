@@ -85,7 +85,7 @@ export function HowItWorksPage() {
           </p>
           <div className="mt-6">
             <Link to="/signup">
-              <Button variant="gold">{t('common.getStarted')}</Button>
+              <Button variant="orange">{t('common.getStarted')}</Button>
             </Link>
           </div>
         </section>
