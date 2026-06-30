@@ -36,7 +36,7 @@ export function ModeToggle({ variant = 'dark', onChange }: ModeToggleProps) {
             }}
             className={`rounded-full px-4 py-1.5 font-body text-sm transition-colors ${
               active
-                ? 'bg-gold text-ink'
+                ? 'bg-orange text-cream'
                 : light
                   ? 'text-cream/70 hover:text-cream'
                   : 'text-muted hover:text-ink'
