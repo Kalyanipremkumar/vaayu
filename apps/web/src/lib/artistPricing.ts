@@ -7,11 +7,13 @@
  */
 import {
   computeArtistPricing,
+  type ArtComplexity,
   type ArtistPricingResult,
   type ArtworkCondition,
   type CareerStage,
   type Dimensions,
   type EditionType,
+  type MarketPositioning,
   type PricingPosture,
   type SellingChannel,
   type ValuationResult,
@@ -41,21 +43,28 @@ export interface SubmitArtistPricingParams {
   // The artwork
   tradition: string;
   medium: string;
+  style: string;
+  /** Dimensions in centimetres (the form converts from inches if needed). */
   dimensions: Dimensions;
   condition: ArtworkCondition;
   yearCreated: number | null;
+  complexity: ArtComplexity;
   // Deeper criteria (Layer 3)
   editionType?: EditionType;
   seriesName?: string;
   signed?: boolean;
   framed?: boolean;
-  // Selling intent (Layers 4 & 5)
+  // Selling intent (Layers 4 & 5) + positioning
   channels: SellingChannel[];
   galleryCutPct: number;
   posture: PricingPosture;
-  // Extra context
+  positioning: MarketPositioning;
+  // Cost floor + pass-through add-ons
   materialsCostInr: number | null;
   hoursWorked: number | null;
+  hourlyRateInr: number | null;
+  framingCostInr: number | null;
+  shippingCostInr: number | null;
   pastSalePrices: string;
   recognition: string;
 }
@@ -74,6 +83,7 @@ export async function submitArtistPricing(
       artistKnown: false,
       tradition: params.tradition,
       medium: params.medium,
+      style: params.style || undefined,
       dimensions: params.dimensions,
       condition: params.condition,
       yearCreated: params.yearCreated,
@@ -102,12 +112,25 @@ export async function submitArtistPricing(
   const breakdown = computeArtistPricing({
     netMidInr: data.estimatedMidInr,
     dimensions: params.dimensions,
+    complexity: params.complexity,
+    positioning: params.positioning,
     posture: params.posture,
     channels: params.channels,
     galleryCutPct: params.galleryCutPct,
+    materialsCostInr: params.materialsCostInr ?? undefined,
+    hoursWorked: params.hoursWorked ?? undefined,
+    hourlyRateInr: params.hourlyRateInr ?? undefined,
+    framingCostInr: params.framingCostInr ?? undefined,
+    shippingCostInr: params.shippingCostInr ?? undefined,
   });
 
-  const result: ArtistPricingResult = { ...breakdown, posture: params.posture, valuation: data };
+  const result: ArtistPricingResult = {
+    ...breakdown,
+    posture: params.posture,
+    complexity: params.complexity,
+    positioning: params.positioning,
+    valuation: data,
+  };
 
   // Persist to the user's history (best-effort — never fail the result on this).
   try {

@@ -103,6 +103,31 @@ export function HomePage() {
           </div>
         </section>
 
+        <section className="mt-20">
+          <p className="text-center font-body text-xs uppercase tracking-[0.25em] text-gold">
+            {t('whyVaayu.kicker')}
+          </p>
+          <h2 className="mx-auto mt-3 max-w-2xl text-center font-heading text-4xl font-medium text-ink md:text-5xl">
+            <Trans
+              i18nKey="whyVaayu.title"
+              components={{ 1: <em className="italic text-gold" /> }}
+            />
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center font-body text-base leading-relaxed text-muted">
+            <Trans i18nKey="whyVaayu.body" components={{ 1: <em className="italic text-ink" /> }} />
+          </p>
+          <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-3">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="bg-cream p-8">
+                <h3 className="font-heading text-xl text-ink">{t(`whyVaayu.p${n}Title`)}</h3>
+                <p className="mt-2 font-body text-sm leading-relaxed text-muted">
+                  {t(`whyVaayu.p${n}Body`)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <section className="mt-20 text-center">
           <h2 className="mx-auto max-w-2xl font-heading text-3xl font-medium leading-tight text-ink md:text-4xl">
             {t('landing.closingTitle')}

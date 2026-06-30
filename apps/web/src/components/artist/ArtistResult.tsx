@@ -59,6 +59,44 @@ export function ArtistResult({ result }: { result: ArtistPricingResult }) {
         ) : null}
       </section>
 
+      {/* Below-cost warning */}
+      {result.belowCost ? (
+        <p className="rounded-xl border border-red-200 bg-red-50 p-4 font-body text-sm text-red-800">
+          {t('artist.belowCostWarning', { cost: formatInr(result.costFloorInr) })}
+        </p>
+      ) : null}
+
+      {/* Cost floor + add-ons */}
+      {result.costFloorInr > 0 || result.addOns.framingInr > 0 || result.addOns.shippingInr > 0 ? (
+        <section className="rounded-xl border border-border p-5">
+          {result.costFloorInr > 0 ? (
+            <>
+              <h3 className="font-heading text-lg text-ink">{t('artist.costFloorTitle')}</h3>
+              <p className="mt-1 font-body text-xs text-muted">{t('artist.costFloorLead')}</p>
+              <dl className="mt-3">
+                <CostRow label={t('artist.materials')} value={result.costBreakdown.materialsInr} />
+                <CostRow label={t('artist.labour')} value={result.costBreakdown.labourInr} />
+                <CostRow label={t('artist.costFloorTotal')} value={result.costFloorInr} strong />
+              </dl>
+            </>
+          ) : null}
+          {result.addOns.framingInr > 0 || result.addOns.shippingInr > 0 ? (
+            <div className={result.costFloorInr > 0 ? 'mt-5 border-t border-border pt-5' : ''}>
+              <h3 className="font-heading text-lg text-ink">{t('artist.addOnsTitle')}</h3>
+              <p className="mt-1 font-body text-xs text-muted">{t('artist.addOnsLead')}</p>
+              <dl className="mt-3">
+                {result.addOns.framingInr > 0 ? (
+                  <CostRow label={t('artist.framing')} value={result.addOns.framingInr} />
+                ) : null}
+                {result.addOns.shippingInr > 0 ? (
+                  <CostRow label={t('artist.shipping')} value={result.addOns.shippingInr} />
+                ) : null}
+              </dl>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
       {/* Channel pricing */}
       {result.channels.length > 0 ? (
         <section>
@@ -121,6 +159,14 @@ export function ArtistResult({ result }: { result: ArtistPricingResult }) {
             rationale={reasoning.workAdjustment.rationale}
           />
           <ReasoningRow
+            label={t('artist.complexityLayer')}
+            value={t(`artist.complexityValue.${result.complexity}`)}
+          />
+          <ReasoningRow
+            label={t('artist.positioningLayer')}
+            value={t(`artist.positioningValue.${result.positioning}`)}
+          />
+          <ReasoningRow
             label={t('artist.postureLayer')}
             value={t(`artist.postureValue.${result.posture}`)}
           />
@@ -131,6 +177,19 @@ export function ArtistResult({ result }: { result: ArtistPricingResult }) {
         {ARTIST_PRICING_DISCLAIMER}
       </p>
     </article>
+  );
+}
+
+function CostRow({ label, value, strong }: { label: string; value: number; strong?: boolean }) {
+  return (
+    <div className="flex justify-between gap-4 border-b border-border py-2 last:border-0">
+      <dt className={`font-body text-sm ${strong ? 'font-medium text-ink' : 'text-muted'}`}>
+        {label}
+      </dt>
+      <dd className={`font-body text-sm ${strong ? 'font-medium text-ink' : 'text-ink'}`}>
+        {formatInr(value)}
+      </dd>
+    </div>
   );
 }
 

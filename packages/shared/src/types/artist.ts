@@ -24,6 +24,15 @@ export type SellingChannel = 'gallery' | 'direct' | 'art_fair' | 'varnam' | 'com
 /** How aggressively the artist wants to price, shaping the ask (Layer 5). */
 export type PricingPosture = 'sell_quickly' | 'balanced' | 'hold';
 
+/** How involved the work is to make — an explicit, artist-set Layer-3 signal. */
+export type ArtComplexity = 'simple' | 'moderate' | 'complex' | 'highly_complex';
+
+/** The market tier the artist is positioning the work in. */
+export type MarketPositioning = 'budget' | 'standard' | 'premium';
+
+/** Unit the artist enters dimensions in. Internally everything is centimetres. */
+export type SizeUnit = 'in' | 'cm';
+
 /**
  * The artist's career context. Stored on their profile so it isn't re-entered
  * for every artwork. Grounds Layer 2 in stated career rather than image guesswork.
@@ -44,15 +53,27 @@ export interface ArtistProfile {
  */
 export interface ArtistPricingInput extends ValuationInput {
   profile: ArtistProfile;
+  /** Free-text style / description (e.g. "abstract expressionist"). */
+  style?: string;
+  /** How involved the work is — an explicit Layer-3 multiplier. */
+  complexity: ArtComplexity;
+  /** Market tier the artist is targeting. */
+  positioning: MarketPositioning;
   /** Channels the artist plans to sell this work in (at least one). */
   channels: SellingChannel[];
   /** The artist's gallery commission as a percentage (20–60). */
   galleryCutPct: number;
   posture: PricingPosture;
-  /** What the artist spent on materials (pigments, paper, frame), INR. */
+  /** What the artist spent on materials (pigments, paper), INR. */
   materialsCostInr?: number;
   /** Hours worked on this piece. */
   hoursWorked?: number;
+  /** The artist's hourly rate for the cost floor, INR. */
+  hourlyRateInr?: number;
+  /** Framing / mounting cost, passed through to the buyer, INR. */
+  framingCostInr?: number;
+  /** Shipping cost, passed through to the buyer, INR. */
+  shippingCostInr?: number;
   /** Free text of past sale prices for similar work — anchors the recommendation. */
   pastSalePrices?: string;
   /** Awards / press / recognition, free text. */
@@ -73,7 +94,8 @@ export interface ChannelPrice {
  * Layer 1–3 result (base / artist / work) so the reasoning can be shown.
  */
 export interface ArtistPricingResult {
-  /** Recommended ask price (net the artist receives), INR. = mid × posture. */
+  /** Recommended ask price (net the artist receives), INR.
+   *  = mid × complexity × positioning × posture. */
   askInr: number;
   /** Absolute negotiation minimum, INR. = ask × 0.77. */
   floorInr: number;
@@ -84,6 +106,16 @@ export interface ArtistPricingResult {
   /** Square footage of the work (for display). */
   areaSqFt: number;
   posture: PricingPosture;
+  complexity: ArtComplexity;
+  positioning: MarketPositioning;
+  /** Direct cost the ask must at least cover: materials + labour. */
+  costFloorInr: number;
+  /** The cost-floor components, for transparency. */
+  costBreakdown: { materialsInr: number; labourInr: number };
+  /** True when the recommended ask falls below direct costs (a warning). */
+  belowCost: boolean;
+  /** Pass-through add-ons the buyer pays on top of the ask. */
+  addOns: { framingInr: number; shippingInr: number };
   /** Channel-specific quoted/net prices for the channels the artist selected. */
   channels: ChannelPrice[];
   /** The underlying three-layer valuation (base × artist × work). */

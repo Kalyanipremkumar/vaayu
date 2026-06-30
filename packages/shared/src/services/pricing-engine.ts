@@ -14,7 +14,10 @@ import {
   ARTIST_TIER_MULTIPLIERS,
   ART_FAIR_PREMIUM,
   COMMISSION_PREMIUM,
+  COMPLEXITY_FACTORS,
+  DEFAULT_HOURLY_RATE_INR,
   ESTIMATE_SPREAD,
+  POSITIONING_FACTORS,
   PRICING_POSTURE_FACTORS,
   UNKNOWN_ARTIST_MULTIPLIER,
   VARNAM_COMMISSION_PCT,
@@ -22,9 +25,11 @@ import {
 } from '../constants/pricing';
 import { clamp } from '../utils/format';
 import type {
+  ArtComplexity,
   ArtistTier,
   ChannelPrice,
   Dimensions,
+  MarketPositioning,
   PricingPosture,
   SellingChannel,
   ValuationInput,
@@ -204,9 +209,18 @@ export interface ArtistPricingParams {
   /** Net mid value from the three-layer valuation (base × artist × work). */
   netMidInr: number;
   dimensions: Dimensions;
+  complexity: ArtComplexity;
+  positioning: MarketPositioning;
   posture: PricingPosture;
   channels: SellingChannel[];
   galleryCutPct: number;
+  /** Cost-floor inputs (all optional). */
+  materialsCostInr?: number;
+  hoursWorked?: number;
+  hourlyRateInr?: number;
+  /** Pass-through add-ons. */
+  framingCostInr?: number;
+  shippingCostInr?: number;
 }
 
 /** The numeric portion of an artist pricing result (no underlying valuation). */
@@ -216,23 +230,62 @@ export interface ArtistPriceBreakdown {
   ceilingInr: number;
   perSqFtInr: number;
   areaSqFt: number;
+  costFloorInr: number;
+  costBreakdown: { materialsInr: number; labourInr: number };
+  belowCost: boolean;
+  addOns: { framingInr: number; shippingInr: number };
   channels: ChannelPrice[];
 }
 
 /**
- * Apply Layer 5 (posture) to the net mid value to get the ask, then derive the
- * floor, ceiling, per-square-foot rate, and Layer-4 channel prices. Pure math.
+ * Apply the artist-set multipliers (complexity × positioning × posture) to the
+ * net mid value to get the ask, then derive the floor, ceiling, per-square-foot
+ * rate, the direct-cost floor (materials + labour), pass-through add-ons, and the
+ * Layer-4 channel prices. Pure math.
  */
 export function computeArtistPricing(params: ArtistPricingParams): ArtistPriceBreakdown {
-  const { netMidInr, dimensions, posture, channels, galleryCutPct } = params;
-  const askInr = Math.round(netMidInr * (PRICING_POSTURE_FACTORS[posture] ?? 1));
+  const { netMidInr, dimensions, complexity, positioning, posture, channels, galleryCutPct } =
+    params;
+
+  const adjusted =
+    netMidInr *
+    (COMPLEXITY_FACTORS[complexity] ?? 1) *
+    (POSITIONING_FACTORS[positioning] ?? 1) *
+    (PRICING_POSTURE_FACTORS[posture] ?? 1);
+  const askInr = Math.round(adjusted);
   const floorInr = Math.round(askInr * ARTIST_PRICE_SPREAD.floorFactor);
   const ceilingInr = Math.round(askInr * ARTIST_PRICE_SPREAD.ceilingFactor);
   const areaSqFt = squareFeet(dimensions);
   const perSqFtInr = areaSqFt > 0 ? Math.round(askInr / areaSqFt) : 0;
+
+  const materialsInr = Math.max(0, Math.round(params.materialsCostInr ?? 0));
+  const rate =
+    params.hourlyRateInr && params.hourlyRateInr > 0
+      ? params.hourlyRateInr
+      : DEFAULT_HOURLY_RATE_INR;
+  const labourInr = Math.max(0, Math.round((params.hoursWorked ?? 0) * rate));
+  const costFloorInr = materialsInr + labourInr;
+
+  const addOns = {
+    framingInr: Math.max(0, Math.round(params.framingCostInr ?? 0)),
+    shippingInr: Math.max(0, Math.round(params.shippingCostInr ?? 0)),
+  };
+
   const seen = new Set<SellingChannel>();
   const channelPrices = channels
     .filter((c) => (seen.has(c) ? false : (seen.add(c), true)))
     .map((c) => channelPrice(c, askInr, galleryCutPct));
-  return { askInr, floorInr, ceilingInr, perSqFtInr, areaSqFt, channels: channelPrices };
+
+  return {
+    askInr,
+    floorInr,
+    ceilingInr,
+    perSqFtInr,
+    areaSqFt,
+    costFloorInr,
+    costBreakdown: { materialsInr, labourInr },
+    belowCost: costFloorInr > 0 && askInr < costFloorInr,
+    addOns,
+    channels: channelPrices,
+  };
 }

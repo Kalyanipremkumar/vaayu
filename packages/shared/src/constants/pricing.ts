@@ -5,9 +5,11 @@
  */
 
 import type {
+  ArtComplexity,
   ArtistTier,
   ArtworkCondition,
   CareerStage,
+  MarketPositioning,
   PaymentProvider,
   PricingPosture,
   SellingChannel,
@@ -189,6 +191,85 @@ export const GALLERY_CUT_RANGE = { min: 20, max: 60, default: 40 } as const;
 
 /** Floor / ceiling spread around the artist ask price. */
 export const ARTIST_PRICE_SPREAD = { floorFactor: 0.77, ceilingFactor: 1.27 } as const;
+
+/** Work complexity — an explicit, artist-set Layer-3 multiplier. */
+export const ART_COMPLEXITIES: readonly {
+  key: ArtComplexity;
+  label: string;
+  factor: number;
+  description: string;
+}[] = [
+  {
+    key: 'simple',
+    label: 'Simple',
+    factor: 0.9,
+    description: 'Quick, minimal detail or single technique.',
+  },
+  {
+    key: 'moderate',
+    label: 'Moderate',
+    factor: 1.0,
+    description: 'Typical detail and effort for your work.',
+  },
+  {
+    key: 'complex',
+    label: 'Complex',
+    factor: 1.15,
+    description: 'Dense detail, layering, or multiple techniques.',
+  },
+  {
+    key: 'highly_complex',
+    label: 'Highly complex',
+    factor: 1.3,
+    description: 'Exceptional intricacy, scale, or technical demand.',
+  },
+];
+
+export const COMPLEXITY_FACTORS: Record<ArtComplexity, number> = {
+  simple: 0.9,
+  moderate: 1.0,
+  complex: 1.15,
+  highly_complex: 1.3,
+};
+
+/** Market positioning — the tier the artist is targeting. */
+export const MARKET_POSITIONINGS: readonly {
+  key: MarketPositioning;
+  label: string;
+  factor: number;
+  description: string;
+}[] = [
+  {
+    key: 'budget',
+    label: 'Budget / accessible',
+    factor: 0.85,
+    description: 'Priced to be widely affordable and move volume.',
+  },
+  {
+    key: 'standard',
+    label: 'Standard / market',
+    factor: 1.0,
+    description: 'In line with comparable work at your stage.',
+  },
+  {
+    key: 'premium',
+    label: 'Premium / collector',
+    factor: 1.25,
+    description: 'Positioned as a premium, collector-grade piece.',
+  },
+];
+
+export const POSITIONING_FACTORS: Record<MarketPositioning, number> = {
+  budget: 0.85,
+  standard: 1.0,
+  premium: 1.25,
+};
+
+/** Default hourly rate used in the cost floor when the artist doesn't set one (INR). */
+export const DEFAULT_HOURLY_RATE_INR = 300;
+
+/** Centimetres per inch, for size-unit conversion. */
+export const CM_PER_INCH = 2.54;
 
 /** Standard disclaimer shown on every artist pricing recommendation. */
 export const ARTIST_PRICING_DISCLAIMER =

@@ -133,40 +133,69 @@ describe('channelPrice', () => {
   });
 });
 
+const baseArtistParams = {
+  dimensions: { heightCm: 60, widthCm: 45 },
+  complexity: 'moderate' as const,
+  positioning: 'standard' as const,
+  posture: 'balanced' as const,
+  channels: ['gallery', 'direct'] as const,
+  galleryCutPct: 40,
+};
+
 describe('computeArtistPricing', () => {
-  it('applies posture to the ask and derives floor/ceiling/per-sq-ft', () => {
+  it('applies complexity/positioning/posture (all neutral) and derives floor/ceiling/per-sq-ft', () => {
     const r = computeArtistPricing({
+      ...baseArtistParams,
       netMidInr: 28500,
-      dimensions: { heightCm: 60, widthCm: 45 },
-      posture: 'balanced',
       channels: ['gallery', 'direct'],
-      galleryCutPct: 40,
     });
-    expect(r.askInr).toBe(28500); // balanced × 1.0
+    expect(r.askInr).toBe(28500); // 1.0 × 1.0 × 1.0
     expect(r.floorInr).toBe(Math.round(28500 * 0.77));
     expect(r.ceilingInr).toBe(Math.round(28500 * 1.27));
     expect(r.perSqFtInr).toBe(Math.round(28500 / squareFeet({ heightCm: 60, widthCm: 45 })));
     expect(r.channels).toHaveLength(2);
   });
 
-  it('discounts the ask under a sell-quickly posture', () => {
+  it('compounds complexity × positioning × posture', () => {
     const r = computeArtistPricing({
-      netMidInr: 28500,
-      dimensions: { heightCm: 60, widthCm: 45 },
-      posture: 'sell_quickly',
-      channels: ['direct'],
-      galleryCutPct: 40,
+      ...baseArtistParams,
+      netMidInr: 10000,
+      complexity: 'complex', // 1.15
+      positioning: 'premium', // 1.25
+      posture: 'hold', // 1.1
     });
-    expect(r.askInr).toBe(Math.round(28500 * 0.9));
+    expect(r.askInr).toBe(Math.round(10000 * 1.15 * 1.25 * 1.1));
+  });
+
+  it('computes the cost floor from materials + labour and flags below-cost', () => {
+    const r = computeArtistPricing({
+      ...baseArtistParams,
+      netMidInr: 5000,
+      positioning: 'budget', // pulls ask below cost
+      materialsCostInr: 2000,
+      hoursWorked: 20,
+      hourlyRateInr: 300,
+    });
+    expect(r.costBreakdown).toEqual({ materialsInr: 2000, labourInr: 6000 });
+    expect(r.costFloorInr).toBe(8000);
+    expect(r.belowCost).toBe(true); // ask 4250 < 8000
+  });
+
+  it('carries pass-through add-ons', () => {
+    const r = computeArtistPricing({
+      ...baseArtistParams,
+      netMidInr: 10000,
+      framingCostInr: 1500,
+      shippingCostInr: 800,
+    });
+    expect(r.addOns).toEqual({ framingInr: 1500, shippingInr: 800 });
   });
 
   it('de-duplicates repeated channels', () => {
     const r = computeArtistPricing({
+      ...baseArtistParams,
       netMidInr: 10000,
-      dimensions: { heightCm: 30, widthCm: 30 },
-      posture: 'balanced',
       channels: ['gallery', 'gallery', 'direct'],
-      galleryCutPct: 40,
     });
     expect(r.channels.map((c) => c.channel)).toEqual(['gallery', 'direct']);
   });

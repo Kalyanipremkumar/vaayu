@@ -3,17 +3,23 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
+  ART_COMPLEXITIES,
   CAREER_STAGES,
+  CM_PER_INCH,
   GALLERY_CUT_RANGE,
+  MARKET_POSITIONINGS,
   MEDIUMS,
   PRICING_POSTURES,
   SELLING_CHANNELS,
   TRADITIONS,
+  type ArtComplexity,
   type ArtworkCondition,
   type CareerStage,
   type EditionType,
+  type MarketPositioning,
   type PricingPosture,
   type SellingChannel,
+  type SizeUnit,
 } from '@vaayu/shared';
 import { Button } from '../components/Button';
 import { TextField } from '../components/TextField';
@@ -65,10 +71,13 @@ export function ArtistPricingPage() {
   // Artwork
   const [tradition, setTradition] = useState('');
   const [medium, setMedium] = useState('');
-  const [heightCm, setHeightCm] = useState('');
-  const [widthCm, setWidthCm] = useState('');
+  const [style, setStyle] = useState('');
+  const [sizeUnit, setSizeUnit] = useState<SizeUnit>('in');
+  const [height, setHeight] = useState('');
+  const [width, setWidth] = useState('');
   const [condition, setCondition] = useState<ArtworkCondition>('excellent');
   const [yearCreated, setYearCreated] = useState('');
+  const [complexity, setComplexity] = useState<ArtComplexity>('moderate');
 
   // Criteria
   const [editionType, setEditionType] = useState<EditionType>('unique');
@@ -76,18 +85,28 @@ export function ArtistPricingPage() {
   const [signed, setSigned] = useState(true);
   const [framed, setFramed] = useState(false);
 
-  // Selling intent
+  // Selling intent + positioning
   const [channels, setChannels] = useState<SellingChannel[]>(['gallery', 'direct']);
   const [galleryCutPct, setGalleryCutPct] = useState<number>(GALLERY_CUT_RANGE.default);
   const [posture, setPosture] = useState<PricingPosture>('balanced');
+  const [positioning, setPositioning] = useState<MarketPositioning>('standard');
 
-  // Extra context
+  // Costs & add-ons
   const [materialsCost, setMaterialsCost] = useState('');
   const [hoursWorked, setHoursWorked] = useState('');
+  const [hourlyRate, setHourlyRate] = useState('');
+  const [framingCost, setFramingCost] = useState('');
+  const [shippingCost, setShippingCost] = useState('');
   const [pastSalePrices, setPastSalePrices] = useState('');
   const [recognition, setRecognition] = useState('');
 
   const [formError, setFormError] = useState<string | null>(null);
+
+  /** Convert the entered dimension to centimetres for the engine. */
+  const toCm = (v: string) => {
+    const n = Number(v) || 0;
+    return sizeUnit === 'in' ? n * CM_PER_INCH : n;
+  };
 
   const conditionOptions: SelectOption[] = [
     { value: 'excellent', label: t('wizard.condExcellent') },
@@ -139,9 +158,11 @@ export function ArtistPricingPage() {
         institutionalCollectors: institutional,
         tradition,
         medium,
-        dimensions: { heightCm: Number(heightCm) || 0, widthCm: Number(widthCm) || 0 },
+        style,
+        dimensions: { heightCm: toCm(height), widthCm: toCm(width) },
         condition,
         yearCreated: yearCreated ? Number(yearCreated) : null,
+        complexity,
         editionType,
         seriesName,
         signed,
@@ -149,8 +170,12 @@ export function ArtistPricingPage() {
         channels,
         galleryCutPct,
         posture,
+        positioning,
         materialsCostInr: materialsCost ? Number(materialsCost) : null,
         hoursWorked: hoursWorked ? Number(hoursWorked) : null,
+        hourlyRateInr: hourlyRate ? Number(hourlyRate) : null,
+        framingCostInr: framingCost ? Number(framingCost) : null,
+        shippingCostInr: shippingCost ? Number(shippingCost) : null,
         pastSalePrices,
         recognition,
       });
@@ -165,8 +190,8 @@ export function ArtistPricingPage() {
     if (!imageFile) return setFormError(t('artist.errImage'));
     if (!tradition) return setFormError(t('wizard.errTradition'));
     if (!medium) return setFormError(t('wizard.errMedium'));
-    if (!(Number(heightCm) > 0)) return setFormError(t('wizard.errHeight'));
-    if (!(Number(widthCm) > 0)) return setFormError(t('wizard.errWidth'));
+    if (!(Number(height) > 0)) return setFormError(t('wizard.errHeight'));
+    if (!(Number(width) > 0)) return setFormError(t('wizard.errWidth'));
     if (channels.length === 0) return setFormError(t('artist.errChannels'));
     mutation.mutate();
   }
@@ -326,26 +351,56 @@ export function ArtistPricingPage() {
             value={medium}
             onChange={(e) => setMedium(e.target.value)}
           />
-          <div className="grid grid-cols-2 gap-4">
-            <TextField
-              label={t('wizard.fieldHeight')}
-              name="height"
-              type="number"
-              min={0}
-              step="0.1"
-              value={heightCm}
-              onChange={(e) => setHeightCm(e.target.value)}
-            />
-            <TextField
-              label={t('wizard.fieldWidth')}
-              name="width"
-              type="number"
-              min={0}
-              step="0.1"
-              value={widthCm}
-              onChange={(e) => setWidthCm(e.target.value)}
-            />
+          <TextField
+            label={t('artist.style')}
+            name="style"
+            value={style}
+            placeholder={t('artist.styleHint')}
+            onChange={(e) => setStyle(e.target.value)}
+          />
+
+          {/* Size — with an inches/cm unit toggle. */}
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="font-body text-sm text-ink">{t('artist.size')}</label>
+              <div className="inline-flex rounded-full border border-border p-0.5">
+                {(['in', 'cm'] as SizeUnit[]).map((u) => (
+                  <button
+                    key={u}
+                    type="button"
+                    onClick={() => setSizeUnit(u)}
+                    className={`rounded-full px-2.5 py-0.5 font-body text-xs transition-colors ${
+                      sizeUnit === u ? 'bg-ink text-cream' : 'text-muted hover:text-ink'
+                    }`}
+                    aria-pressed={sizeUnit === u}
+                  >
+                    {u === 'in' ? t('artist.inches') : t('artist.cm')}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <TextField
+                label={t('artist.width')}
+                name="width"
+                type="number"
+                min={0}
+                step="0.1"
+                value={width}
+                onChange={(e) => setWidth(e.target.value)}
+              />
+              <TextField
+                label={t('artist.height')}
+                name="height"
+                type="number"
+                min={0}
+                step="0.1"
+                value={height}
+                onChange={(e) => setHeight(e.target.value)}
+              />
+            </div>
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <SelectField
               label={t('wizard.fieldCondition')}
@@ -364,6 +419,13 @@ export function ArtistPricingPage() {
               onChange={(e) => setYearCreated(e.target.value)}
             />
           </div>
+          <SelectField
+            label={t('artist.complexity')}
+            name="complexity"
+            options={ART_COMPLEXITIES.map((c) => ({ value: c.key, label: c.label }))}
+            value={complexity}
+            onChange={(e) => setComplexity(e.target.value as ArtComplexity)}
+          />
           <div className="grid grid-cols-2 gap-4">
             <SelectField
               label={t('artist.edition')}
@@ -444,10 +506,18 @@ export function ArtistPricingPage() {
             value={posture}
             onChange={(e) => setPosture(e.target.value as PricingPosture)}
           />
+          <SelectField
+            label={t('artist.positioning')}
+            name="positioning"
+            options={MARKET_POSITIONINGS.map((p) => ({ value: p.key, label: p.label }))}
+            value={positioning}
+            onChange={(e) => setPositioning(e.target.value as MarketPositioning)}
+          />
         </Section>
 
-        {/* Optional context */}
-        <Section title={t('artist.sectionContext')}>
+        {/* Costs & add-ons */}
+        <Section title={t('artist.sectionCosts')}>
+          <p className="font-body text-xs text-muted">{t('artist.costsHint')}</p>
           <div className="grid grid-cols-2 gap-4">
             <TextField
               label={t('artist.materialsCost')}
@@ -466,6 +536,37 @@ export function ArtistPricingPage() {
               onChange={(e) => setHoursWorked(e.target.value)}
             />
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <TextField
+              label={t('artist.hourlyRate')}
+              name="hourlyRate"
+              type="number"
+              min={0}
+              placeholder={t('artist.hourlyRateHint')}
+              value={hourlyRate}
+              onChange={(e) => setHourlyRate(e.target.value)}
+            />
+            <TextField
+              label={t('artist.framingCost')}
+              name="framingCost"
+              type="number"
+              min={0}
+              value={framingCost}
+              onChange={(e) => setFramingCost(e.target.value)}
+            />
+          </div>
+          <TextField
+            label={t('artist.shippingCost')}
+            name="shippingCost"
+            type="number"
+            min={0}
+            value={shippingCost}
+            onChange={(e) => setShippingCost(e.target.value)}
+          />
+        </Section>
+
+        {/* Optional context */}
+        <Section title={t('artist.sectionContext')}>
           <TextField
             label={t('artist.pastSales')}
             name="pastSales"

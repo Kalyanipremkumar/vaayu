@@ -253,8 +253,9 @@ Deno.serve(async (req: Request) => {
     }
   }
 
+  const style = typeof payload.style === 'string' ? sanitizeFreeText(payload.style) : '';
   const purposeInstruction = PURPOSE_INSTRUCTIONS[purpose] ?? PURPOSE_INSTRUCTIONS.fair_market;
-  const contextLines = buildPromptContext({
+  const baseContext = buildPromptContext({
     artistKnown: input.artistKnown,
     artistName: input.artistName,
     tradition: input.tradition,
@@ -267,6 +268,7 @@ Deno.serve(async (req: Request) => {
     criteria,
     artist,
   });
+  const contextLines = style ? `${baseContext}\n- Style / description: ${style}` : baseContext;
 
   const systemPrompt =
     mode === 'artist'
