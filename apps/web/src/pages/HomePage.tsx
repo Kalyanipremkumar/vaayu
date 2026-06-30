@@ -5,6 +5,7 @@ import { Logo } from '../components/Logo';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { ModeToggle } from '../components/ModeToggle';
 import { useAppMode } from '../store/appModeStore';
+import { useAuth } from '../hooks/useAuth';
 import { env } from '../lib/env';
 
 /**
@@ -15,6 +16,7 @@ import { env } from '../lib/env';
 export function HomePage() {
   const { t } = useTranslation();
   const { mode } = useAppMode();
+  const { user } = useAuth();
   const isArtist = mode === 'artist';
   const layers = [1, 2, 3].map((n) => ({
     n: String(n).padStart(2, '0'),
@@ -34,10 +36,10 @@ export function HomePage() {
             {t('common.howItWorks')}
           </Link>
           <Link
-            to="/login"
+            to={user ? '/dashboard' : '/login'}
             className="font-body text-sm text-muted underline-offset-4 transition-colors hover:text-ink hover:underline"
           >
-            {t('common.signIn')}
+            {user ? t('common.dashboard') : t('common.signIn')}
           </Link>
           <LanguageSwitcher />
         </nav>
@@ -62,20 +64,30 @@ export function HomePage() {
             {t(isArtist ? 'landingArtist.lead' : 'landing.lead')}
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-            <Link to="/signup">
-              <Button variant="orange">
-                {isArtist ? t('landingArtist.cta') : t('landing.getStartedFree')}
-              </Button>
-            </Link>
-            <Link to="/login">
-              <Button variant="outlineLight">{t('common.signIn')}</Button>
-            </Link>
+            {user ? (
+              <Link to="/dashboard">
+                <Button variant="orange">{t('landing.goToDashboard')}</Button>
+              </Link>
+            ) : (
+              <>
+                <Link to="/signup">
+                  <Button variant="orange">
+                    {isArtist ? t('landingArtist.cta') : t('landing.getStartedFree')}
+                  </Button>
+                </Link>
+                <Link to="/login">
+                  <Button variant="outlineLight">{t('common.signIn')}</Button>
+                </Link>
+              </>
+            )}
           </div>
-          <p className="mt-6 font-body text-xs text-cream/40">
-            {isArtist
-              ? t('landingArtist.freeNote')
-              : t('landing.freeNote', { count: env.freeValuationLimit })}
-          </p>
+          {user ? null : (
+            <p className="mt-6 font-body text-xs text-cream/40">
+              {isArtist
+                ? t('landingArtist.freeNote')
+                : t('landing.freeNote', { count: env.freeValuationLimit })}
+            </p>
+          )}
         </section>
 
         <section className="mt-20">
