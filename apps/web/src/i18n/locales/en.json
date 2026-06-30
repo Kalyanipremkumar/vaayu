@@ -275,8 +275,8 @@
     "signedInAs": "Signed in as {{email}}"
   },
   "settings": {
-    "title": "Settings",
-    "profile": "Profile",
+    "title": "Profile",
+    "profile": "Your details",
     "save": "Save",
     "saved": "Saved.",
     "saveError": "Could not save. Please try again.",
