@@ -10,16 +10,16 @@
  */
 
 export const COLORS = {
-  /** Primary brand dark — deep petrol teal (heritage/auction-house feel). */
-  ink: '#0E3A38',
+  /** Primary brand dark — Varnam Studio burgundy (dark surface + headings). */
+  ink: '#3E1324',
   /** Background — off-white cream. */
   cream: '#FFFDF8',
-  /** Accent — warm gold. */
-  gold: '#C8A84B',
+  /** Accent — Varnam Studio warm gold. */
+  gold: '#AB8838',
   /** Secondary text. */
   muted: '#5C5C5C',
-  /** Borders / hairlines. */
-  border: '#D8CFC0',
+  /** Borders / hairlines — warm sand. */
+  border: '#E4D9C6',
 } as const;
 
 export const FONTS = {

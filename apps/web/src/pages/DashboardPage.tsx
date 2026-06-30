@@ -116,18 +116,12 @@ function CollectorBody() {
       ) : null}
 
       <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
-        <div className="flex flex-wrap gap-3">
+        <div>
           <Link
             to="/valuations/new"
             className="inline-flex rounded-full bg-ink px-6 py-3 font-body text-sm font-medium text-cream transition-colors hover:bg-ink/90"
           >
             {t('dashboard.newValuationPlus')}
-          </Link>
-          <Link
-            to="/price"
-            className="inline-flex items-center rounded-full border border-gold px-6 py-3 font-body text-sm font-medium text-ink transition-colors hover:bg-gold/10"
-          >
-            {t('dashboard.priceArt')}
           </Link>
         </div>
         {hasAny ? (
@@ -185,18 +179,12 @@ function ArtistBody() {
         </p>
       ) : null}
 
-      <div className="mt-6 flex flex-wrap gap-3">
+      <div className="mt-6">
         <Link
           to="/price"
           className="inline-flex rounded-full bg-ink px-6 py-3 font-body text-sm font-medium text-cream transition-colors hover:bg-ink/90"
         >
           {t('dashboard.priceArtPlus')}
-        </Link>
-        <Link
-          to="/valuations/new"
-          className="inline-flex items-center rounded-full border border-gold px-6 py-3 font-body text-sm font-medium text-ink transition-colors hover:bg-gold/10"
-        >
-          {t('dashboard.newValuation')}
         </Link>
       </div>
 

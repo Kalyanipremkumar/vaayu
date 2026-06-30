@@ -15,13 +15,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Brand dark surface + text. Deep petrol teal — heritage/auction-house
-        // feel, pairs with gold + cream. (Was near-black #1A0A05.)
-        ink: '#0E3A38',
+        // Varnam Studio brand. Burgundy is the dark surface + heading colour;
+        // warm gold is the accent; cream is the canvas. (Mirror in design-tokens.)
+        ink: '#3E1324', // Varnam burgundy (was deep teal #0E3A38)
         cream: '#FFFDF8',
-        gold: '#C8A84B',
+        gold: '#AB8838', // Varnam gold (was #C8A84B)
         muted: '#5C5C5C',
-        border: '#D8CFC0',
+        border: '#E4D9C6',
       },
       fontFamily: {
         heading: ['"Cormorant Garamond"', 'Georgia', '"Times New Roman"', 'serif'],
