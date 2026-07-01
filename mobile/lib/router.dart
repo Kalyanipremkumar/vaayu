@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'screens/artist/artist_intro_screen.dart';
 import 'screens/artist/artist_wizard_screen.dart';
 import 'screens/auth/register_screen.dart';
+import 'screens/collector/collector_intro_screen.dart';
 import 'screens/collector/collector_upload_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/orders/orders_screen.dart';
@@ -14,6 +15,7 @@ final appRouter = GoRouter(
     GoRoute(path: '/register', builder: (c, s) => const RegisterScreen()),
     GoRoute(path: '/artist', builder: (c, s) => const ArtistIntroScreen()),
     GoRoute(path: '/artist/wizard', builder: (c, s) => const ArtistWizardScreen()),
+    GoRoute(path: '/collector/intro', builder: (c, s) => const CollectorIntroScreen()),
     GoRoute(path: '/collector', builder: (c, s) => const CollectorUploadScreen()),
     GoRoute(path: '/account', builder: (c, s) => const AccountScreen()),
     GoRoute(path: '/orders', builder: (c, s) => const OrdersScreen()),

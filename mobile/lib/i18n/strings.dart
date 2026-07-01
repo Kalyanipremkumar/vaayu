@@ -24,6 +24,8 @@ class AppStrings {
     required this.methodologyEyebrow,
     required this.methodologyTitlePre,
     required this.methodologyTitleEmph,
+    required this.methodologyLead,
+    required this.begin,
     required this.layer1Title,
     required this.layer1Body,
     required this.layer2Title,
@@ -84,6 +86,7 @@ class AppStrings {
   final String ctaCollector, ctaArtist;
   final String disclaimerCollector, disclaimerArtist;
   final String methodologyEyebrow, methodologyTitlePre, methodologyTitleEmph;
+  final String methodologyLead, begin;
   final String layer1Title, layer1Body, layer2Title, layer2Body, layer3Title, layer3Body;
   final String brandTagline;
   final String account, welcome, defaultMode, defaultModeArtist, defaultModeCollector;
@@ -118,6 +121,8 @@ class AppStrings {
     methodologyEyebrow: 'The methodology',
     methodologyTitlePre: 'Three layers, ',
     methodologyTitleEmph: 'fully shown',
+    methodologyLead: 'Every valuation is shown in full — no black box, nothing hidden.',
+    begin: 'Begin',
     layer1Title: 'Base value',
     layer1Body: 'A market benchmark from the tradition and medium.',
     layer2Title: 'Artist standing',
@@ -188,6 +193,8 @@ class AppStrings {
     methodologyEyebrow: 'हमारी पद्धति',
     methodologyTitlePre: 'तीन परतें, ',
     methodologyTitleEmph: 'पूरी तरह दिखाई गईं',
+    methodologyLead: 'हर मूल्यांकन पूरी तरह दिखाया जाता है — कुछ भी छिपा नहीं।',
+    begin: 'आरंभ करें',
     layer1Title: 'आधार मूल्य',
     layer1Body: 'परंपरा और माध्यम के आधार पर बाज़ार मानक।',
     layer2Title: 'कलाकार की प्रतिष्ठा',

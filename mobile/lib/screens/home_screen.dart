@@ -24,7 +24,7 @@ class HomeScreen extends ConsumerWidget {
       context.push('/register');
       return;
     }
-    context.push(artist ? '/artist' : '/collector');
+    context.push(artist ? '/artist' : '/collector/intro');
   }
 
   @override
@@ -93,39 +93,13 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
 
-            // Methodology teaser (cream)
+            // Brand footer (cream)
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 36, 20, 40),
-              child: Column(
-                children: [
-                  EyebrowLabel(s.methodologyEyebrow, align: TextAlign.center),
-                  const SizedBox(height: 8),
-                  RichText(
-                    textAlign: TextAlign.center,
-                    text: TextSpan(
-                      style: AppTypography.displaySmall,
-                      children: [
-                        TextSpan(text: s.methodologyTitlePre),
-                        TextSpan(
-                            text: s.methodologyTitleEmph,
-                            style: AppTypography.emphasis(AppTypography.displaySmall)),
-                        const TextSpan(text: '.'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  _LayerCard(n: '01', title: s.layer1Title, body: s.layer1Body),
-                  const SizedBox(height: 10),
-                  _LayerCard(n: '02', title: s.layer2Title, body: s.layer2Body),
-                  const SizedBox(height: 10),
-                  _LayerCard(n: '03', title: s.layer3Title, body: s.layer3Body),
-                  const SizedBox(height: 32),
-                  Text(s.brandTagline,
-                      textAlign: TextAlign.center,
-                      style: AppTypography.headlineSmall.copyWith(
-                          color: AppColors.gold, fontStyle: FontStyle.italic)),
-                ],
-              ),
+              padding: const EdgeInsets.fromLTRB(24, 40, 24, 44),
+              child: Text(s.brandTagline,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.headlineSmall
+                      .copyWith(color: AppColors.gold, fontStyle: FontStyle.italic)),
             ),
           ],
         ),
@@ -151,29 +125,6 @@ class _Headline extends StatelessWidget {
         TextSpan(text: emph, style: emphStyle),
         TextSpan(text: post),
       ]),
-    );
-  }
-}
-
-class _LayerCard extends StatelessWidget {
-  const _LayerCard({required this.n, required this.title, required this.body});
-  final String n;
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    return VaayuCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(n, style: AppTypography.displaySmall.copyWith(color: AppColors.gold, fontSize: 34)),
-          const SizedBox(height: 6),
-          Text(title, style: AppTypography.headlineMedium),
-          const SizedBox(height: 6),
-          Text(body, style: AppTypography.bodySmall),
-        ],
-      ),
     );
   }
 }
