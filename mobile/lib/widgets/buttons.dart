@@ -53,10 +53,11 @@ class PrimaryButton extends StatelessWidget {
 
 /// Burgundy outline pill — supporting action.
 class SecondaryButton extends StatelessWidget {
-  const SecondaryButton({super.key, required this.label, this.onPressed});
+  const SecondaryButton({super.key, required this.label, this.onPressed, this.icon});
 
   final String label;
   final VoidCallback? onPressed;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +72,16 @@ class SecondaryButton extends StatelessWidget {
           shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(28))),
           textStyle: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w500),
         ),
-        child: Text(label),
+        child: icon == null
+            ? Text(label)
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 16),
+                  const SizedBox(width: 6),
+                  Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
+                ],
+              ),
       ),
     );
   }

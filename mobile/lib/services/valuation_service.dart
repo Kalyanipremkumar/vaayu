@@ -28,6 +28,41 @@ class ValuationService {
     return ValuationResult.fromJson(Map<String, dynamic>.from(data));
   }
 
+  /// Collector Mode: upload a photo + a little context, get the three-layer
+  /// valuation (estimate range + reasoning) straight from the server.
+  Future<ValuationResult> valueArtwork({
+    required Uint8List imageBytes,
+    required String mime,
+    required bool artistKnown,
+    String? artistName,
+    required String tradition,
+    required String medium,
+    String? style,
+    required double heightCm,
+    required double widthCm,
+    required ArtworkCondition condition,
+    int? yearCreated,
+    bool? signed,
+    bool? framed,
+  }) {
+    return _invoke({
+      'mode': 'collector',
+      'imageBase64': _dataUrl(imageBytes, mime),
+      'artistKnown': artistKnown,
+      if (artistKnown && artistName != null && artistName.isNotEmpty) 'artistName': artistName,
+      'tradition': tradition,
+      'medium': medium,
+      if (style != null && style.isNotEmpty) 'style': style,
+      'dimensions': {'heightCm': heightCm, 'widthCm': widthCm},
+      'condition': condition.key,
+      if (yearCreated != null) 'yearCreated': yearCreated,
+      'criteria': {
+        if (signed != null) 'signed': signed,
+        if (framed != null) 'framed': framed,
+      },
+    });
+  }
+
   /// Artist Mode: returns the full recommendation (Layers 1–3 from the server,
   /// Layers 4–5 + cost floor + add-ons computed locally).
   Future<ArtistPricingResult> priceArtwork({

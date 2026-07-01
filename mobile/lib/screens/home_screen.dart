@@ -23,13 +23,7 @@ class HomeScreen extends ConsumerWidget {
       context.push('/register');
       return;
     }
-    if (artist) {
-      context.push('/artist');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Collector valuation is coming next.')),
-      );
-    }
+    context.push(artist ? '/artist' : '/collector');
   }
 
   @override
@@ -40,7 +34,10 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       appBar: VaayuAppBar(
         actions: [
-          AppBarIconAction(icon: Icons.person_outline, onTap: () {}, tooltip: 'Account'),
+          AppBarIconAction(
+              icon: Icons.person_outline,
+              onTap: () => context.push('/account'),
+              tooltip: 'Account'),
         ],
       ),
       body: SingleChildScrollView(
