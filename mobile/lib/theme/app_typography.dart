@@ -6,6 +6,12 @@ import 'app_colors.dart';
 /// Type scale per the Flutter UI spec. Cormorant Garamond for editorial weight,
 /// Jost for utility, Noto Sans Devanagari for Hindi. (Fonts via google_fonts.)
 class AppTypography {
+  /// When true, the Latin brand faces (Cormorant/Jost — no Devanagari glyphs)
+  /// are swapped for Noto Serif/Sans Devanagari so Hindi renders correctly.
+  /// Set once per build in main() from the active locale; the whole tree
+  /// rebuilds on a locale change so every style is read consistently.
+  static bool hindi = false;
+
   static TextStyle _cormorant(
     double size, {
     FontWeight weight = FontWeight.w500,
@@ -13,8 +19,11 @@ class AppTypography {
     double height = 1.15,
     FontStyle style = FontStyle.normal,
   }) =>
-      GoogleFonts.cormorantGaramond(
-          fontSize: size, fontWeight: weight, color: color, height: height, fontStyle: style);
+      hindi
+          ? GoogleFonts.notoSerifDevanagari(
+              fontSize: size, fontWeight: weight, color: color, height: height)
+          : GoogleFonts.cormorantGaramond(
+              fontSize: size, fontWeight: weight, color: color, height: height, fontStyle: style);
 
   static TextStyle _jost(
     double size, {
@@ -23,12 +32,15 @@ class AppTypography {
     double height = 1.5,
     double? letterSpacing,
   }) =>
-      GoogleFonts.jost(
-          fontSize: size,
-          fontWeight: weight,
-          color: color,
-          height: height,
-          letterSpacing: letterSpacing);
+      hindi
+          ? GoogleFonts.notoSansDevanagari(
+              fontSize: size, fontWeight: weight, color: color, height: height)
+          : GoogleFonts.jost(
+              fontSize: size,
+              fontWeight: weight,
+              color: color,
+              height: height,
+              letterSpacing: letterSpacing);
 
   // Display (Cormorant)
   static TextStyle get displayLarge => _cormorant(44);

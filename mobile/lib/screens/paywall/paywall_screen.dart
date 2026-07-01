@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/payment_service.dart';
 import '../../services/valuation_service.dart' show PaymentProof, PaymentsUnconfiguredException;
 import '../../state/auth.dart';
+import '../../state/locale.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../widgets/buttons.dart';
@@ -54,6 +55,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = ref.watch(stringsProvider);
     return Scaffold(
       appBar: const VaayuAppBar(showBack: true),
       body: SafeArea(
@@ -67,7 +69,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 decoration:
                     const BoxDecoration(color: AppColors.burgundy, borderRadius: AppRadius.bigCard),
                 child: Column(children: [
-                  EyebrowLabel('Your free valuation is used', color: AppColors.goldLight),
+                  EyebrowLabel(s.freeUsed, color: AppColors.goldLight),
                   const SizedBox(height: 16),
                   RichText(
                     textAlign: TextAlign.center,
@@ -80,23 +82,23 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text('per valuation',
+                  Text(s.perValuation,
                       style: AppTypography.bodyMedium.copyWith(color: AppColors.beige)),
                 ]),
               ),
               const SizedBox(height: 24),
 
-              Text('What you get', style: AppTypography.displaySmall),
+              Text(s.whatYouGet, style: AppTypography.displaySmall),
               const SizedBox(height: 12),
-              _perk('A full AI valuation with an estimated value range'),
-              _perk('The three-layer reasoning, fully shown'),
-              _perk('Comparable works and a confidence score'),
-              _perk('Saved to your history to revisit any time'),
+              _perk(s.perk1),
+              _perk(s.perk2),
+              _perk(s.perk3),
+              _perk(s.perk4),
               const SizedBox(height: 24),
 
               if (_error != null) ...[ErrorBanner(_error!), const SizedBox(height: 16)],
               PrimaryButton(
-                label: 'Pay ₹99 & continue',
+                label: s.payAndContinue,
                 icon: Icons.lock_open,
                 loading: _paying,
                 onPressed: _pay,
@@ -104,13 +106,13 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
               const SizedBox(height: 10),
               Center(
                 child: TertiaryButton(
-                    label: 'Not now', onPressed: () => Navigator.of(context).pop()),
+                    label: s.notNow, onPressed: () => Navigator.of(context).pop()),
               ),
               const SizedBox(height: 16),
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 const Icon(Icons.shield_outlined, size: 14, color: AppColors.grey400),
                 const SizedBox(width: 6),
-                Text('Secure payment via Razorpay',
+                Text(s.securePayment,
                     style: AppTypography.bodySmall.copyWith(color: AppColors.grey400)),
               ]),
             ],

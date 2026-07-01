@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../engine/format.dart';
+import '../../i18n/strings.dart';
 import '../../services/history_service.dart';
 import '../../state/auth.dart';
+import '../../state/locale.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import '../../widgets/buttons.dart';
@@ -49,6 +51,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final s = ref.watch(stringsProvider);
     return Scaffold(
       appBar: const VaayuAppBar(showBack: true),
       body: SafeArea(
@@ -56,15 +59,13 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
           future: _future,
           builder: (context, snap) {
             if (snap.connectionState == ConnectionState.waiting) {
-              return const Center(
-                child: VaayuLoading(status: 'Loading your history…'),
-              );
+              return Center(child: VaayuLoading(status: s.loadingHistory));
             }
             if (snap.hasError) {
               return _message('Could not load your history.', retry: true);
             }
             final items = snap.data ?? const [];
-            if (items.isEmpty) return _empty();
+            if (items.isEmpty) return _empty(s);
 
             return RefreshIndicator(
               color: AppColors.gold,
@@ -72,12 +73,12 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
                 children: [
-                  const EyebrowLabel('Your history'),
+                  EyebrowLabel(s.historyEyebrow),
                   const SizedBox(height: 6),
-                  Text('Valuations & pricings', style: AppTypography.displaySmall),
+                  Text(s.valuationsAndPricings, style: AppTypography.displaySmall),
                   const SizedBox(height: 20),
                   for (final item in items) ...[
-                    _card(item),
+                    _card(item, s),
                     const SizedBox(height: 12),
                   ],
                 ],
@@ -89,7 +90,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
     );
   }
 
-  Widget _card(HistoryItem item) {
+  Widget _card(HistoryItem item, AppStrings s) {
     return GestureDetector(
       onTap: () => _open(item),
       child: VaayuCard(
@@ -110,7 +111,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
-                _tag(item.isArtist ? 'Pricing' : 'Valuation', item.isArtist),
+                _tag(item.isArtist ? s.pricingTag : s.valuationTag, item.isArtist),
                 const Spacer(),
                 Text(DateFormat('d MMM y').format(item.createdAt),
                     style: AppTypography.bodySmall.copyWith(color: AppColors.grey400)),
@@ -123,7 +124,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
               const SizedBox(height: 2),
               Text(
                 item.isArtist
-                    ? 'Ask ${formatInr(item.amountInr)}'
+                    ? '${s.askPrefix}${formatInr(item.amountInr)}'
                     : formatInr(item.amountInr),
                 style: AppTypography.price.copyWith(fontSize: 18),
               ),
@@ -153,7 +154,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                 color: artist ? AppColors.gold : AppColors.burgundy)),
       );
 
-  Widget _empty() => Center(
+  Widget _empty(AppStrings s) => Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(
@@ -161,13 +162,13 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
             children: [
               const Icon(Icons.history, size: 48, color: AppColors.gold),
               const SizedBox(height: 16),
-              Text('No valuations yet', style: AppTypography.headlineMedium),
+              Text(s.noValuations, style: AppTypography.headlineMedium),
               const SizedBox(height: 6),
-              Text('Your valuations and pricings will appear here.',
+              Text(s.noValuationsBody,
                   textAlign: TextAlign.center,
                   style: AppTypography.bodyMedium.copyWith(color: AppColors.grey600)),
               const SizedBox(height: 24),
-              PrimaryButton(label: 'Start a valuation', onPressed: () => context.go('/')),
+              PrimaryButton(label: s.startValuation, onPressed: () => context.go('/')),
             ],
           ),
         ),

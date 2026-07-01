@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../engine/enums.dart';
 import '../state/app_mode.dart';
 import '../state/auth.dart';
+import '../state/locale.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../widgets/buttons.dart';
@@ -29,6 +30,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = ref.watch(appModeProvider);
+    final s = ref.watch(stringsProvider);
     final artist = mode == AppMode.artist;
 
     return Scaffold(
@@ -55,31 +57,31 @@ class HomeScreen extends ConsumerWidget {
                   Image.asset('assets/images/vaayu-mark.png', height: 88),
                   const SizedBox(height: 24),
                   EyebrowLabel(
-                    artist ? 'AI · PRICING FOR ARTISTS' : 'AI · ART VALUATION',
+                    artist ? s.eyebrowArtist : s.eyebrowCollector,
                     color: AppColors.goldLight,
                     align: TextAlign.center,
                   ),
                   const SizedBox(height: 14),
-                  _Headline(artist: artist),
+                  _Headline(
+                    pre: artist ? s.headlineArtistPre : s.headlineCollectorPre,
+                    emph: artist ? s.headlineArtistEmph : s.headlineCollectorEmph,
+                    post: artist ? s.headlineArtistPost : s.headlineCollectorPost,
+                  ),
                   const SizedBox(height: 14),
                   Text(
-                    artist
-                        ? 'Stop guessing. Get a defensible ask price for every piece — with a floor, a ceiling, and what to charge at each channel.'
-                        : 'Upload a photograph, add a little context, and get an AI valuation with a defensible, layer-by-layer pricing report.',
+                    artist ? s.leadArtist : s.leadCollector,
                     textAlign: TextAlign.center,
                     style: AppTypography.bodyMedium.copyWith(color: AppColors.beige, height: 1.5),
                   ),
                   const SizedBox(height: 28),
                   PrimaryButton(
-                    label: artist ? 'Get my recommended price' : "Get started — it's free",
+                    label: artist ? s.ctaArtist : s.ctaCollector,
                     icon: Icons.arrow_forward,
                     onPressed: () => _start(context, ref, artist),
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    artist
-                        ? 'For guidance only — not a guarantee of sale.'
-                        : 'Your first valuations are free. AI guidance, not a certified appraisal.',
+                    artist ? s.disclaimerArtist : s.disclaimerCollector,
                     textAlign: TextAlign.center,
                     style: AppTypography.eyebrow.copyWith(
                       color: AppColors.beige.withValues(alpha: 0.6),
@@ -96,27 +98,29 @@ class HomeScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(20, 36, 20, 40),
               child: Column(
                 children: [
-                  const EyebrowLabel('The methodology', align: TextAlign.center),
+                  EyebrowLabel(s.methodologyEyebrow, align: TextAlign.center),
                   const SizedBox(height: 8),
                   RichText(
                     textAlign: TextAlign.center,
                     text: TextSpan(
                       style: AppTypography.displaySmall,
                       children: [
-                        const TextSpan(text: 'Three layers, '),
-                        TextSpan(text: 'fully shown', style: AppTypography.emphasis(AppTypography.displaySmall)),
+                        TextSpan(text: s.methodologyTitlePre),
+                        TextSpan(
+                            text: s.methodologyTitleEmph,
+                            style: AppTypography.emphasis(AppTypography.displaySmall)),
                         const TextSpan(text: '.'),
                       ],
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const _LayerCard(n: '01', title: 'Base value', body: 'A market benchmark from the tradition and medium.'),
+                  _LayerCard(n: '01', title: s.layer1Title, body: s.layer1Body),
                   const SizedBox(height: 10),
-                  const _LayerCard(n: '02', title: 'Artist standing', body: 'Recognition tier, from emerging to renowned.'),
+                  _LayerCard(n: '02', title: s.layer2Title, body: s.layer2Body),
                   const SizedBox(height: 10),
-                  const _LayerCard(n: '03', title: 'Work adjustment', body: 'Condition, size, materials, rarity, provenance.'),
+                  _LayerCard(n: '03', title: s.layer3Title, body: s.layer3Body),
                   const SizedBox(height: 32),
-                  Text('Vaayu — the spirit of the work, valued.',
+                  Text(s.brandTagline,
                       textAlign: TextAlign.center,
                       style: AppTypography.headlineSmall.copyWith(
                           color: AppColors.gold, fontStyle: FontStyle.italic)),
@@ -131,26 +135,22 @@ class HomeScreen extends ConsumerWidget {
 }
 
 class _Headline extends StatelessWidget {
-  const _Headline({required this.artist});
-  final bool artist;
+  const _Headline({required this.pre, required this.emph, required this.post});
+  final String pre;
+  final String emph;
+  final String post;
 
   @override
   Widget build(BuildContext context) {
     final base = AppTypography.displayMedium.copyWith(color: AppColors.cream, height: 1.1);
-    final emph = base.copyWith(fontStyle: FontStyle.italic, color: AppColors.goldLight);
+    final emphStyle = base.copyWith(fontStyle: FontStyle.italic, color: AppColors.goldLight);
     return RichText(
       textAlign: TextAlign.center,
-      text: artist
-          ? TextSpan(style: base, children: [
-              const TextSpan(text: 'Price your art with '),
-              TextSpan(text: 'confidence', style: emph),
-              const TextSpan(text: '.'),
-            ])
-          : TextSpan(style: base, children: [
-              const TextSpan(text: 'Know what your art is '),
-              TextSpan(text: 'worth', style: emph),
-              const TextSpan(text: '.'),
-            ]),
+      text: TextSpan(style: base, children: [
+        TextSpan(text: pre),
+        TextSpan(text: emph, style: emphStyle),
+        TextSpan(text: post),
+      ]),
     );
   }
 }
