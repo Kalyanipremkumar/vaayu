@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../engine/constants.dart';
 import '../../engine/enums.dart';
+import '../../services/storage_service.dart';
 import '../../services/valuation_service.dart';
 import '../../state/auth.dart';
 import '../../theme/app_colors.dart';
@@ -14,6 +15,7 @@ import '../../widgets/buttons.dart';
 import '../../widgets/common.dart';
 import '../../widgets/vaayu_app_bar.dart';
 import '../../widgets/vaayu_text_field.dart';
+import '../paywall/paywall_screen.dart';
 import 'collector_result_screen.dart';
 
 /// Screen 04 — Collector valuation intake. A photograph plus a little context,
@@ -45,6 +47,7 @@ class _CollectorUploadScreenState extends ConsumerState<CollectorUploadScreen> {
 
   bool _submitting = false;
   String? _error;
+  String? _uploadedPath; // reuse the upload across a payment retry
 
   @override
   void dispose() {
@@ -86,24 +89,65 @@ class _CollectorUploadScreenState extends ConsumerState<CollectorUploadScreen> {
       _error = null;
     });
     try {
-      final service = ValuationService(ref.read(supabaseProvider));
-      final result = await service.valueArtwork(
-        imageBytes: _image!,
-        mime: _mime,
-        artistKnown: _artistKnown,
-        artistName: _artistName.text.trim(),
-        tradition: _tradition!,
-        medium: _medium!,
-        style: _style.text.trim(),
-        heightCm: h,
-        widthCm: w,
-        condition: _condition,
-        yearCreated: int.tryParse(_year.text.trim()),
-      );
-      if (!mounted) return;
-      Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => CollectorResultScreen(result: result, image: _image),
-      ));
+      final client = ref.read(supabaseProvider);
+      final user = ref.read(currentUserProvider);
+      if (user == null) throw Exception('Please sign in to continue.');
+
+      // Upload once; reuse the path if a payment retry is needed.
+      _uploadedPath ??= await StorageService(client).uploadArtwork(user.id, _image!, _mime);
+      await _runValuation(payment: null);
+    } on PaymentRequiredException {
+      await _handlePayment();
+    } on PaymentsUnconfiguredException {
+      if (mounted) {
+        setState(() => _error =
+            'Paid valuations aren’t available yet. Please try again later.');
+      }
+    } catch (e) {
+      if (mounted) setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  Future<void> _runValuation({PaymentProof? payment}) async {
+    final h = _cm(_height), w = _cm(_width);
+    final service = ValuationService(ref.read(supabaseProvider));
+    final saved = await service.valueArtwork(
+      imageBytes: _image!,
+      mime: _mime,
+      artworkImageUrl: _uploadedPath!,
+      artistKnown: _artistKnown,
+      artistName: _artistName.text.trim(),
+      tradition: _tradition!,
+      medium: _medium!,
+      style: _style.text.trim(),
+      heightCm: h,
+      widthCm: w,
+      condition: _condition,
+      yearCreated: int.tryParse(_year.text.trim()),
+      payment: payment,
+    );
+    if (!mounted) return;
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => CollectorResultScreen(result: saved.result, image: _image),
+    ));
+  }
+
+  Future<void> _handlePayment() async {
+    final proof = await Navigator.of(context).push<PaymentProof>(
+      MaterialPageRoute(builder: (_) => const PaywallScreen()),
+    );
+    if (proof == null) {
+      if (mounted) setState(() => _submitting = false);
+      return;
+    }
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    try {
+      await _runValuation(payment: proof);
     } catch (e) {
       if (mounted) setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {

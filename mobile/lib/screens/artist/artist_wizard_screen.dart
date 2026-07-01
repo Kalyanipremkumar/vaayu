@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../engine/constants.dart';
 import '../../engine/enums.dart';
+import '../../services/history_service.dart';
 import '../../services/valuation_service.dart';
 import '../../state/auth.dart';
 import '../../theme/app_colors.dart';
@@ -170,6 +171,21 @@ class _ArtistWizardScreenState extends ConsumerState<ArtistWizardScreen> {
         pastSalePrices: _pastSales.text.trim(),
         recognition: _recognition.text.trim(),
       );
+      // Best-effort: persist to history without blocking the result.
+      final user = ref.read(currentUserProvider);
+      if (user != null) {
+        HistoryService(ref.read(supabaseProvider))
+            .saveArtistPricing(
+              userId: user.id,
+              result: result,
+              tradition: _tradition,
+              medium: _medium,
+              careerStage: _careerStage.key,
+              imageBytes: _image,
+              imageMime: _mime,
+            )
+            .ignore();
+      }
       if (!mounted) return;
       Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => ArtistResultScreen(result: result, image: _image)),

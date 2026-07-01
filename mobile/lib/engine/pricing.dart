@@ -19,6 +19,7 @@ class LayerBase {
   final String rationale;
   factory LayerBase.fromJson(Map<String, dynamic> j) =>
       LayerBase((j['amount'] as num?)?.round() ?? 0, (j['rationale'] ?? '') as String);
+  Map<String, dynamic> toJson() => {'amount': amount, 'rationale': rationale};
 }
 
 class LayerMultiplier {
@@ -31,6 +32,8 @@ class LayerMultiplier {
         (j['rationale'] ?? '') as String,
         j['tier'] as String?,
       );
+  Map<String, dynamic> toJson() =>
+      {'multiplier': multiplier, 'rationale': rationale, if (tier != null) 'tier': tier};
 }
 
 class ValuationReasoning {
@@ -45,6 +48,12 @@ class ValuationReasoning {
         LayerMultiplier.fromJson((j['workAdjustment'] ?? {}) as Map<String, dynamic>),
         ((j['comparables'] as List?)?.cast<String>()) ?? const [],
       );
+  Map<String, dynamic> toJson() => {
+        'baseValue': baseValue.toJson(),
+        'artistMultiplier': artistMultiplier.toJson(),
+        'workAdjustment': workAdjustment.toJson(),
+        'comparables': comparables,
+      };
 }
 
 class ValuationResult {
@@ -71,6 +80,14 @@ class ValuationResult {
         reasoning: ValuationReasoning.fromJson((j['reasoning'] ?? {}) as Map<String, dynamic>),
         fullReport: (j['fullReport'] ?? '') as String,
       );
+  Map<String, dynamic> toJson() => {
+        'estimatedLowInr': estimatedLowInr,
+        'estimatedMidInr': estimatedMidInr,
+        'estimatedHighInr': estimatedHighInr,
+        'confidenceScore': confidenceScore,
+        'reasoning': reasoning.toJson(),
+        'fullReport': fullReport,
+      };
 }
 
 // ── Layer 4 (channel) + 5 (posture) + cost floor + add-ons ───────────────────
@@ -80,7 +97,18 @@ class ChannelPrice {
   final SellingChannel channel;
   final int quotedInr;
   final int netInr;
+  Map<String, dynamic> toJson() =>
+      {'channel': channel.key, 'quotedInr': quotedInr, 'netInr': netInr};
+  factory ChannelPrice.fromJson(Map<String, dynamic> j) => ChannelPrice(
+        SellingChannel.values.firstWhere((c) => c.key == j['channel'],
+            orElse: () => SellingChannel.direct),
+        (j['quotedInr'] as num?)?.round() ?? 0,
+        (j['netInr'] as num?)?.round() ?? 0,
+      );
 }
+
+T _enumByKey<T>(List<T> values, dynamic key, T fallback, String Function(T) keyOf) =>
+    values.firstWhere((v) => keyOf(v) == key, orElse: () => fallback);
 
 ChannelPrice channelPrice(SellingChannel channel, int askInr, double galleryCutPct) {
   switch (channel) {
@@ -135,6 +163,50 @@ class ArtistPricingResult {
   final int shippingInr;
   final List<ChannelPrice> channels;
   final ValuationResult valuation;
+
+  Map<String, dynamic> toJson() => {
+        'askInr': askInr,
+        'floorInr': floorInr,
+        'ceilingInr': ceilingInr,
+        'perSqFtInr': perSqFtInr,
+        'areaSqFt': areaSqFt,
+        'complexity': complexity.key,
+        'positioning': positioning.key,
+        'posture': posture.key,
+        'costFloorInr': costFloorInr,
+        'materialsInr': materialsInr,
+        'labourInr': labourInr,
+        'belowCost': belowCost,
+        'framingInr': framingInr,
+        'shippingInr': shippingInr,
+        'channels': channels.map((c) => c.toJson()).toList(),
+        'valuation': valuation.toJson(),
+      };
+
+  factory ArtistPricingResult.fromJson(Map<String, dynamic> j) => ArtistPricingResult(
+        askInr: (j['askInr'] as num?)?.round() ?? 0,
+        floorInr: (j['floorInr'] as num?)?.round() ?? 0,
+        ceilingInr: (j['ceilingInr'] as num?)?.round() ?? 0,
+        perSqFtInr: (j['perSqFtInr'] as num?)?.round() ?? 0,
+        areaSqFt: (j['areaSqFt'] as num?)?.toDouble() ?? 0,
+        complexity: _enumByKey(
+            ArtComplexity.values, j['complexity'], ArtComplexity.moderate, (e) => e.key),
+        positioning: _enumByKey(
+            MarketPositioning.values, j['positioning'], MarketPositioning.standard, (e) => e.key),
+        posture:
+            _enumByKey(PricingPosture.values, j['posture'], PricingPosture.balanced, (e) => e.key),
+        costFloorInr: (j['costFloorInr'] as num?)?.round() ?? 0,
+        materialsInr: (j['materialsInr'] as num?)?.round() ?? 0,
+        labourInr: (j['labourInr'] as num?)?.round() ?? 0,
+        belowCost: j['belowCost'] == true,
+        framingInr: (j['framingInr'] as num?)?.round() ?? 0,
+        shippingInr: (j['shippingInr'] as num?)?.round() ?? 0,
+        channels: ((j['channels'] as List?) ?? const [])
+            .map((c) => ChannelPrice.fromJson(Map<String, dynamic>.from(c as Map)))
+            .toList(),
+        valuation: ValuationResult.fromJson(
+            Map<String, dynamic>.from((j['valuation'] ?? {}) as Map)),
+      );
 }
 
 /// Apply complexity × positioning × posture to the net mid value, then derive

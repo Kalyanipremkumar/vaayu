@@ -5,6 +5,7 @@ import 'screens/artist/artist_wizard_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/collector/collector_upload_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/orders/orders_screen.dart';
 import 'screens/settings/account_screen.dart';
 
 final appRouter = GoRouter(
@@ -15,5 +16,6 @@ final appRouter = GoRouter(
     GoRoute(path: '/artist/wizard', builder: (c, s) => const ArtistWizardScreen()),
     GoRoute(path: '/collector', builder: (c, s) => const CollectorUploadScreen()),
     GoRoute(path: '/account', builder: (c, s) => const AccountScreen()),
+    GoRoute(path: '/orders', builder: (c, s) => const OrdersScreen()),
   ],
 );

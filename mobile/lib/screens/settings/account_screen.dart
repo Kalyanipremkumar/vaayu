@@ -102,6 +102,27 @@ class AccountScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 28),
 
+              if (user != null) ...[
+                GestureDetector(
+                  onTap: () => context.push('/orders'),
+                  child: VaayuCard(
+                    child: Row(children: [
+                      const Icon(Icons.history, color: AppColors.gold),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text('Your history', style: AppTypography.headlineSmall),
+                          Text('Past valuations & pricings',
+                              style: AppTypography.bodySmall.copyWith(color: AppColors.grey600)),
+                        ]),
+                      ),
+                      const Icon(Icons.chevron_right, color: AppColors.grey400),
+                    ]),
+                  ),
+                ),
+                const SizedBox(height: 28),
+              ],
+
               const EyebrowLabel('About'),
               const SizedBox(height: 8),
               _row('Vaayu', 'the spirit of the work, valued'),
