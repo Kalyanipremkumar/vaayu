@@ -19,6 +19,14 @@ class AuthService {
   AuthService(this._c);
   final SupabaseClient _c;
 
+  // Phone OTP (passwordless) — the primary flow per the design.
+  Future<void> sendPhoneOtp(String phone, {String? fullName}) =>
+      _c.auth.signInWithOtp(phone: phone, data: fullName != null ? {'full_name': fullName} : null);
+
+  Future<AuthResponse> verifyPhoneOtp(String phone, String token) =>
+      _c.auth.verifyOTP(phone: phone, token: token, type: OtpType.sms);
+
+  // Email/password fallback (works without an SMS provider).
   Future<void> signIn(String email, String password) =>
       _c.auth.signInWithPassword(email: email, password: password);
 

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../engine/enums.dart';
 import '../state/app_mode.dart';
+import '../state/auth.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../widgets/buttons.dart';
@@ -13,10 +15,22 @@ import '../widgets/vaayu_app_bar.dart';
 /// Screen 01 — Home. Burgundy hero with the mode toggle, headline, and the one
 /// orange CTA, then a short methodology teaser on cream.
 class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key, this.onStart});
+  const HomeScreen({super.key});
 
-  /// Called by the CTA (navigates to auth / the relevant flow).
-  final void Function(AppMode mode)? onStart;
+  void _start(BuildContext context, WidgetRef ref, bool artist) {
+    final loggedIn = ref.read(currentUserProvider) != null;
+    if (!loggedIn) {
+      context.push('/register');
+      return;
+    }
+    if (artist) {
+      context.push('/artist');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Collector valuation is coming next.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -62,7 +76,7 @@ class HomeScreen extends ConsumerWidget {
                   PrimaryButton(
                     label: artist ? 'Get my recommended price' : "Get started — it's free",
                     icon: Icons.arrow_forward,
-                    onPressed: () => onStart?.call(mode),
+                    onPressed: () => _start(context, ref, artist),
                   ),
                   const SizedBox(height: 14),
                   Text(
